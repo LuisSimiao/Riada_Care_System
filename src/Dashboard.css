@@ -1,17 +1,18 @@
 body {
-  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
-  background: linear-gradient(135deg, #e3f0ff 0%, #f8f9fa 100%);
+  font-family: 'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  background: linear-gradient(135deg, #fff8f3 0%, #f8f9fa 100%);
   margin: 0;
   padding: 0;
 }
 
 .dashboard-card {
-  background: #fff;
+  background: #fff8f3;
   border-radius: 18px;
-  box-shadow: 0 4px 24px #0002;
+  box-shadow: 0 4px 24px #a12c2f22;
   margin: 40px auto;
   padding: 32px 36px 24px 36px;
-  max-width: 1200px;
+  max-width: 1100px;
+  border: 2px solid #a12c2f;
 }
 
 .dashboard-header {
@@ -19,8 +20,9 @@ body {
   margin-bottom: 32px;
   font-size: 2.2em;
   font-weight: 700;
-  color: #1a5e8a;
+  color: #a12c2f;
   letter-spacing: 1px;
+  font-family: 'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif;
 }
 
 .charts-row {
@@ -31,13 +33,14 @@ body {
   justify-content: center;
 }
 .chart-container {
-  background: #f4f8fc;
+  background: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 8px #0001;
+  box-shadow: 0 2px 8px #a12c2f22;
   padding: 18px 10px 10px 10px;
   width: 420px;
   flex: 1 1 0;
   min-width: 320px;
+  border: 1.5px solid #e6b13a;
 }
 
 .alerts-table-container {
@@ -55,44 +58,49 @@ body {
 }
 
 .alert-table-block {
-  background: #f8f9fa;
+  background: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 8px #0001;
+  box-shadow: 0 2px 8px #a12c2f22;
   padding: 18px 16px 10px 16px;
   min-width: 320px;
   flex: 1 1 0;
   margin-bottom: 0;
+  border: 1.5px solid #e6b13a;
 }
 
 .alert-table-title {
   margin-bottom: 10px;
   font-size: 1.1em;
-  color: #2a3b4c;
+  color: #a12c2f;
   text-align: center;
   letter-spacing: 0.5px;
+  font-family: 'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif;
 }
 
 .alert-table {
   border-collapse: collapse;
   width: 100%;
-  background: white;
+  background: #fff8f3;
 }
 
 .alert-table th {
   padding: 6px 8px;
-  background: #e9ecef;
-  border-bottom: 2px solid #dee2e6;
-  font-size: 0.98em;
+  background: #e6b13a;
+  border-bottom: 2px solid #a12c2f;
+  font-size: 1em;
+  color: #7a1c1e;
+  font-family: 'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif;
 }
 
 .alert-table td {
   text-align: center;
   padding: 5px 8px;
-  border-bottom: 1px solid #e3e6ea;
+  border-bottom: 1px solid #e6b13a;
+  font-size: 1em;
 }
 
 .alert-table tbody tr:nth-child(even) {
-  background: #f4f6f8;
+  background: #fff8f3;
 }
 
 .alert-table tbody tr:nth-child(odd) {
@@ -101,12 +109,12 @@ body {
 
 .alert-table td:last-child {
   font-weight: 600;
-  color: #1a5e8a;
+  color: #a12c2f;
 }
 
 .alert-table td:first-child {
   font-weight: 500;
-  color: #2a3b4c;
+  color: #7a1c1e;
 }
 
 .circle-number {
@@ -116,8 +124,8 @@ body {
   padding: 2px 8px;
   border-radius: 50%;
   background: #fff;
-  border: 2px solid #1a5e8a;
-  color: #1a5e8a;
+  border: 2px solid #e6b13a;
+  color: #a12c2f;
   font-weight: 600;
   font-size: 1em;
   text-align: center;
@@ -126,7 +134,7 @@ body {
 }
 
 .circle-number.total {
-  background: #1a5e8a;
+  background: #a12c2f;
   color: #fff;
-  border: 2px solid #1a5e8a;
+  border: 2px solid #a12c2f;
 }

@@ -1,0 +1,130 @@
+/* Hillcrest color scheme */
+:root {
+  --hillcrest-primary: #a12c2f;
+  --hillcrest-accent: #e6b13a;
+  --hillcrest-bg: #fffbe6;
+  --hillcrest-dark: #34495e;
+  --hillcrest-success: #27ae60;
+  --hillcrest-text: #222;
+}
+
+.accident-report-container {
+  max-width: 700px;
+  margin: 40px auto;
+  background: var(--hillcrest-bg);
+  border-radius: 16px;
+  box-shadow: 0 2px 16px var(--hillcrest-primary)22;
+  padding: 24px 18px;
+  font-family: 'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  border: 2px solid var(--hillcrest-primary);
+}
+
+.accident-report-title {
+  text-align: center;
+  font-weight: bold;
+  font-size: 2em;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+  color: var(--hillcrest-primary);
+}
+
+.location-selector {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.location-selector span {
+  font-weight: bold;
+  margin-right: 12px;
+  color: var(--hillcrest-dark);
+}
+
+.location-btn {
+  background: #bbb; /* Grey for unselected */
+  color: #222;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-weight: bold;
+  margin-right: 8px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  font-family: 'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif;
+}
+
+.location-btn.selected {
+  background: var(--hillcrest-primary); /* Red for selected */
+  color: #fff;
+}
+
+hr {
+  margin-bottom: 24px;
+  border: none;
+  border-top: 1px solid #eee;
+}
+
+.accident-form-section {
+  border: 1px solid #e6b13a;
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 18px;
+  background: #fff;
+}
+
+.accident-form-label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 6px;
+  color: var(--hillcrest-primary);
+}
+
+.accident-form-input,
+.accident-form-textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1.5px solid var(--hillcrest-primary);
+  border-radius: 4px;
+  font-size: 1em;
+  background: #fffbe6;
+  margin-bottom: 4px;
+  color: var(--hillcrest-dark);
+  font-family: 'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif;
+}
+
+.accident-form-input[type="date"],
+.accident-form-input[type="time"] {
+  width: 220px;
+}
+
+.accident-form-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.accident-form-submit {
+  background: var(--hillcrest-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 36px;
+  font-weight: bold;
+  font-size: 1.15em;
+  cursor: pointer;
+  margin-top: 12px;
+  letter-spacing: 1px;
+  box-shadow: 0 2px 8px var(--hillcrest-primary)22;
+  transition: background 0.2s;
+}
+
+.accident-form-submit:disabled {
+  background: #bdc3c7;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.status-message {
+  margin-top: 18px;
+  color: var(--hillcrest-primary);
+  text-align: center;
+  font-weight: bold;
+}

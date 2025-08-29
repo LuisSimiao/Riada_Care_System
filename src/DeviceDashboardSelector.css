@@ -1,0 +1,179 @@
+body {
+  background: #fffbe6; /* Main Hillcrest background */
+}
+
+.lights-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100vw;
+  max-width: 100vw;
+  margin: 0;
+  padding: 24px 0 16px 0;
+  box-sizing: border-box;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  transform: translateX(-50%);
+}
+
+.status-light {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+}
+
+.status-light-circle {
+  display: inline-block;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+  box-shadow: 0 0 8px #8882;
+}
+
+.status-light-circle.red {
+  background: #e74c3c;
+  border: 3px solid #e74c3c;
+  box-shadow: 0 0 16px #e74c3c88;
+}
+
+.status-light-circle.green {
+  background: #27ae60;
+  border: 3px solid #27ae60;
+}
+
+.status-light-circle.grey {
+  background: #d3d3d3;
+  border: 3px solid #d3d3d3;
+}
+
+.status-light-label {
+  font-weight: bold;
+  font-size: 1.1em;
+  text-align: center;
+  color: #222; /* Dark text for contrast */
+}
+
+.dashboard-container {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px #a12c2f22;
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 18px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  border: 2px solid #34495e; /* More neutral border */
+  min-height: 0;
+  font-family: 'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  font-size: 1.1em;
+  letter-spacing: 0.5px;
+}
+
+.dashboard-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start; /* Top-align both columns */
+  width: 100%;
+  justify-content: space-between;
+  gap: 32px; /* Optional: add space between columns */
+}
+
+.dashboard-left,
+.dashboard-right {
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Make sure content is left-aligned */
+}
+
+.dashboard-right {
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* <-- Change from flex-start to stretch */
+}
+
+/* Button styles for better accessibility */
+button {
+  background: #34495e;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-weight: bold;
+  font-size: 1em;
+  cursor: pointer;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 8px #34495e22;
+  font-family: 'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  transition: background 0.2s;
+}
+
+button:disabled {
+  background: #bdc3c7;
+  color: #888;
+  cursor: not-allowed;
+}
+
+button.selected,
+button:active,
+button:focus {
+  background: #27ae60;
+  color: #fff;
+}
+
+input[type="date"] {
+  font-size: 1em;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 2px solid #34495e;
+  background: #f7f7fa;
+  color: #222;
+  font-weight: bold;
+  font-family: 'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif;
+}
+
+/* Alerts box */
+.dashboard-right > div {
+  background: #f9fafc;
+  border: 1px solid #27ae60;
+  border-radius: 8px;
+  box-shadow: 0 1px 6px #27ae6022;
+  padding: 12px 14px;
+  text-align: left;
+  max-width: 260px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 1em;
+  font-family: 'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  color: #222;
+}
+
+.dashboard-right > div > div {
+  color: #27ae60;
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-size: 1em;
+}
+
+.dashboard-right > button {
+  width: 100%;
+  max-width: 260px; /* Match the alert box width */
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 18px;
+  box-sizing: border-box;
+}
+
+/* Alert details */
+.dashboard-right b {
+  color: #34495e;
+}
