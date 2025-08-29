@@ -1,0 +1,132 @@
+body {
+  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+  background: linear-gradient(135deg, #e3f0ff 0%, #f8f9fa 100%);
+  margin: 0;
+  padding: 0;
+}
+
+.dashboard-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px #0002;
+  margin: 40px auto;
+  padding: 32px 36px 24px 36px;
+  max-width: 1200px;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 32px;
+  font-size: 2.2em;
+  font-weight: 700;
+  color: #1a5e8a;
+  letter-spacing: 1px;
+}
+
+.charts-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  margin-bottom: 30px;
+  justify-content: center;
+}
+.chart-container {
+  background: #f4f8fc;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #0001;
+  padding: 18px 10px 10px 10px;
+  width: 420px;
+  flex: 1 1 0;
+  min-width: 320px;
+}
+
+.alerts-table-container {
+  margin-top: 40px;
+  margin-bottom: 30px;
+  max-width: 1000px;
+}
+
+.alerts-tables-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  margin-bottom: 30px;
+  justify-content: center;
+}
+
+.alert-table-block {
+  background: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #0001;
+  padding: 18px 16px 10px 16px;
+  min-width: 320px;
+  flex: 1 1 0;
+  margin-bottom: 0;
+}
+
+.alert-table-title {
+  margin-bottom: 10px;
+  font-size: 1.1em;
+  color: #2a3b4c;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.alert-table {
+  border-collapse: collapse;
+  width: 100%;
+  background: white;
+}
+
+.alert-table th {
+  padding: 6px 8px;
+  background: #e9ecef;
+  border-bottom: 2px solid #dee2e6;
+  font-size: 0.98em;
+}
+
+.alert-table td {
+  text-align: center;
+  padding: 5px 8px;
+  border-bottom: 1px solid #e3e6ea;
+}
+
+.alert-table tbody tr:nth-child(even) {
+  background: #f4f6f8;
+}
+
+.alert-table tbody tr:nth-child(odd) {
+  background: #fff;
+}
+
+.alert-table td:last-child {
+  font-weight: 600;
+  color: #1a5e8a;
+}
+
+.alert-table td:first-child {
+  font-weight: 500;
+  color: #2a3b4c;
+}
+
+.circle-number {
+  display: inline-block;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 2px 8px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #1a5e8a;
+  color: #1a5e8a;
+  font-weight: 600;
+  font-size: 1em;
+  text-align: center;
+  line-height: 22px;
+  box-sizing: border-box;
+}
+
+.circle-number.total {
+  background: #1a5e8a;
+  color: #fff;
+  border: 2px solid #1a5e8a;
+}
