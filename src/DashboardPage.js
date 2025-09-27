@@ -49,7 +49,7 @@ function DashboardPage() {
 
   const [labels] = useState(periods.map(p => p.label));
   const [alertTables, setAlertTables] = useState([]);
-  const [deviceLabel, setDeviceLabel] = useState(group === "CARE-B" ? "Hillcrest" : "Archview");
+  const [deviceLabel, setDeviceLabel] = useState(group === "CARE-A" ? "Hillcrest" : "Archview");
 
   // State for info bubbles
   const [showTempInfo, setShowTempInfo] = useState(false);
@@ -61,217 +61,223 @@ function DashboardPage() {
     if (!date) return;
 
     // Fetch environment data for the selected date from backend (MySQL)
-    fetch(`http://localhost:3001/api/environment-data?group=${group}&date=${date}`, {
+    fetch(`http://192.168.1.38:3001/api/environment-data?group=${group}&date=${date}`, {
       method: "GET"
     })
       .then(res => res.json())
       .then(data => {
-        // Write the data to public/synthetic_environment_test.jsonl via backend
-        fetch("http://localhost:3001/api/write-jsonl", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data })
-        })
-          .then(res => res.json())
-          .then(() => {
-            // Now fetch the file for chart rendering
-            fetch(process.env.PUBLIC_URL + "/synthetic_environment_test.jsonl")
-              .then(res => res.text())
-              .then(text => {
-                const parsedData = text.trim().split('\n').map(line => JSON.parse(line));
-                const [dashboardYear, dashboardMonth, dashboardDay] = date.split("-").map(Number);
+        // Now use the fetched 'data' directly for chart rendering
+        const parsedData = data; // Use the data directly
+        console.log('Fetched parsedData:', parsedData); // DEBUG
+        const [dashboardYear, dashboardMonth, dashboardDay] = date.split("-").map(Number);
 
-                // Get all device IDs for this group and day
-                const deviceIds = [...new Set(
-                  parsedData
-                    .filter(row => row.device_id.startsWith(group))
-                    .filter(row => {
-                      const d = new Date(row.timestamp);
-                      return (
-                        d.getUTCFullYear() === dashboardYear &&
-                        d.getUTCMonth() === dashboardMonth - 1 &&
-                        d.getUTCDate() === dashboardDay
-                      );
-                    })
-                    .map(row => row.device_id)
-                )];
+        // Map group to device IDs
+        const groupDeviceIds = group === "CARE-A"
+          ? ["Hillcrest-1", "Hillcrest-2"]
+          : ["Archview-1", "Archview-2"];
 
-                // Prepare chart datasets for each device (room)
-                const chartDatasets = deviceIds.map((deviceId, idx) => {
-                  const filtered = parsedData.filter(row => {
-                    if (row.device_id !== deviceId) return false;
-                    const d = new Date(row.timestamp);
-                    return (
-                      d.getUTCFullYear() === dashboardYear &&
-                      d.getUTCMonth() === dashboardMonth - 1 &&
-                      d.getUTCDate() === dashboardDay
-                    );
-                  });
-                  return {
-                    label: deviceId,
-                    data: getAverages(filtered, "temperature_c"),
-                    borderWidth: 2,
-                    fill: false,
-                    borderColor: hillcrestColors[idx % hillcrestColors.length],
-                    backgroundColor: hillcrestColors[idx % hillcrestColors.length],
-                  };
-                });
+        // Get all device IDs for this group and day (only those with data)
+        const deviceIds = groupDeviceIds.filter(deviceId =>
+          parsedData.some(row => {
+            if (row.device_id !== deviceId) return false;
+            const d = new Date(row.timestamp.replace(" ", "T"));
+            return (
+              d.getUTCFullYear() === dashboardYear &&
+              d.getUTCMonth() === dashboardMonth - 1 &&
+              d.getUTCDate() === dashboardDay
+            );
+          })
+        );
+        console.log('Device IDs with data for this day:', deviceIds); // DEBUG
 
-                // Humidity datasets
-                const humidityDatasets = deviceIds.map((deviceId, idx) => {
-                  const filtered = parsedData.filter(row => {
-                    if (row.device_id !== deviceId) return false;
-                    const d = new Date(row.timestamp);
-                    return (
-                      d.getUTCFullYear() === dashboardYear &&
-                      d.getUTCMonth() === dashboardMonth - 1 &&
-                      d.getUTCDate() === dashboardDay
-                    );
-                  });
-                  return {
-                    label: deviceId,
-                    data: getAverages(filtered, "humidity_percent"),
-                    borderWidth: 2,
-                    fill: false,
-                    borderColor: hillcrestColors[idx % hillcrestColors.length],
-                    backgroundColor: hillcrestColors[idx % hillcrestColors.length],
-                  };
-                });
-
-                // CO datasets
-                const coDatasets = deviceIds.map((deviceId, idx) => {
-                  const filtered = parsedData.filter(row => {
-                    if (row.device_id !== deviceId) return false;
-                    const d = new Date(row.timestamp);
-                    return (
-                      d.getUTCFullYear() === dashboardYear &&
-                      d.getUTCMonth() === dashboardMonth - 1 &&
-                      d.getUTCDate() === dashboardDay
-                    );
-                  });
-                  return {
-                    label: deviceId,
-                    data: getAverages(filtered, "co_ppm"),
-                    borderWidth: 2,
-                    fill: false,
-                    borderColor: hillcrestColors[idx % hillcrestColors.length],
-                    backgroundColor: hillcrestColors[idx % hillcrestColors.length],
-                  };
-                });
-
-                // CO2 datasets
-                const co2Datasets = deviceIds.map((deviceId, idx) => {
-                  const filtered = parsedData.filter(row => {
-                    if (row.device_id !== deviceId) return false;
-                    const d = new Date(row.timestamp);
-                    return (
-                      d.getUTCFullYear() === dashboardYear &&
-                      d.getUTCMonth() === dashboardMonth - 1 &&
-                      d.getUTCDate() === dashboardDay
-                    );
-                  });
-                  return {
-                    label: deviceId,
-                    data: getAverages(filtered, "co2_ppm"),
-                    borderWidth: 2,
-                    fill: false,
-                    borderColor: hillcrestColors[idx % hillcrestColors.length],
-                    backgroundColor: hillcrestColors[idx % hillcrestColors.length],
-                  };
-                });
-
-                // Destroy previous charts before creating new ones
-                destroyChart(tempRef);
-                destroyChart(humidityRef);
-                destroyChart(coRef);
-                destroyChart(co2Ref);
-
-                // Draw charts with multiple lines (one per room/device)
-                if (window.Chart) {
-                  tempRef.current._chart = new window.Chart(tempRef.current, {
-                    type: "line",
-                    data: {
-                      labels,
-                      datasets: chartDatasets,
-                    },
-                    options: {
-                      scales: {
-                        y: {
-                          beginAtZero: false,
-                          title: { display: true, text: "Temperature (°C)" },
-                        },
-                      },
-                      maintainAspectRatio: false,
-                    },
-                  });
-
-                  humidityRef.current._chart = new window.Chart(humidityRef.current, {
-                    type: "line",
-                    data: {
-                      labels,
-                      datasets: humidityDatasets,
-                    },
-                    options: {
-                      scales: {
-                        y: {
-                          beginAtZero: false,
-                          title: { display: true, text: "Humidity (%)" },
-                        },
-                      },
-                      maintainAspectRatio: false,
-                    },
-                  });
-
-                  coRef.current._chart = new window.Chart(coRef.current, {
-                    type: "line",
-                    data: {
-                      labels,
-                      datasets: coDatasets,
-                    },
-                    options: {
-                      scales: {
-                        y: {
-                          beginAtZero: false,
-                          title: { display: true, text: "CO (ppm)" },
-                        },
-                      },
-                      maintainAspectRatio: false,
-                    },
-                  });
-
-                  co2Ref.current._chart = new window.Chart(co2Ref.current, {
-                    type: "line",
-                    data: {
-                      labels,
-                      datasets: co2Datasets,
-                    },
-                    options: {
-                      scales: {
-                        y: {
-                          beginAtZero: false,
-                          title: { display: true, text: "CO₂ (ppm)" },
-                        },
-                      },
-                      maintainAspectRatio: false,
-                    },
-                  });
-                }
-              });
+        // Prepare chart datasets for each device (room)
+        const chartDatasets = deviceIds.map((deviceId, idx) => {
+          const filtered = parsedData.filter(row => {
+            if (row.device_id !== deviceId) return false;
+            const d = new Date(row.timestamp.replace(" ", "T"));
+            return (
+              d.getUTCFullYear() === dashboardYear &&
+              d.getUTCMonth() === dashboardMonth - 1 &&
+              d.getUTCDate() === dashboardDay
+            );
           });
+          // Debug log for filtered data
+          console.log('Filtered data for averages (DashboardPage):', deviceId, filtered);
+          return {
+            label: deviceId,
+            data: getAverages(filtered, "temperature_c"),
+            borderWidth: 2,
+            fill: false,
+            borderColor: hillcrestColors[idx % hillcrestColors.length],
+            backgroundColor: hillcrestColors[idx % hillcrestColors.length],
+          };
+        });
+
+        // Humidity datasets
+        const humidityDatasets = deviceIds.map((deviceId, idx) => {
+          const filtered = parsedData.filter(row => {
+            if (row.device_id !== deviceId) return false;
+            const d = new Date(row.timestamp.replace(" ", "T"));
+            return (
+              d.getUTCFullYear() === dashboardYear &&
+              d.getUTCMonth() === dashboardMonth - 1 &&
+              d.getUTCDate() === dashboardDay
+            );
+          });
+          return {
+            label: deviceId,
+            data: getAverages(filtered, "humidity_percent"),
+            borderWidth: 2,
+            fill: false,
+            borderColor: hillcrestColors[idx % hillcrestColors.length],
+            backgroundColor: hillcrestColors[idx % hillcrestColors.length],
+          };
+        });
+
+        // CO datasets
+        const coDatasets = deviceIds.map((deviceId, idx) => {
+          const filtered = parsedData.filter(row => {
+            if (row.device_id !== deviceId) return false;
+            const d = new Date(row.timestamp.replace(" ", "T"));
+            return (
+              d.getUTCFullYear() === dashboardYear &&
+              d.getUTCMonth() === dashboardMonth - 1 &&
+              d.getUTCDate() === dashboardDay
+            );
+          });
+          return {
+            label: deviceId,
+            data: getAverages(filtered, "co_ppm"),
+            borderWidth: 2,
+            fill: false,
+            borderColor: hillcrestColors[idx % hillcrestColors.length],
+            backgroundColor: hillcrestColors[idx % hillcrestColors.length],
+          };
+        });
+
+        // CO2 datasets
+        const co2Datasets = deviceIds.map((deviceId, idx) => {
+          const filtered = parsedData.filter(row => {
+            if (row.device_id !== deviceId) return false;
+            const d = new Date(row.timestamp.replace(" ", "T"));
+            return (
+              d.getUTCFullYear() === dashboardYear &&
+              d.getUTCMonth() === dashboardMonth - 1 &&
+              d.getUTCDate() === dashboardDay
+            );
+          });
+          return {
+            label: deviceId,
+            data: getAverages(filtered, "co2_ppm"),
+            borderWidth: 2,
+            fill: false,
+            borderColor: hillcrestColors[idx % hillcrestColors.length],
+            backgroundColor: hillcrestColors[idx % hillcrestColors.length],
+          };
+        });
+
+        // Destroy previous charts before creating new ones
+        destroyChart(tempRef);
+        destroyChart(humidityRef);
+        destroyChart(coRef);
+        destroyChart(co2Ref);
+
+        // Draw charts with multiple lines (one per room/device)
+        if (window.Chart) {
+          tempRef.current._chart = new window.Chart(tempRef.current, {
+            type: "line",
+            data: {
+              labels,
+              datasets: chartDatasets,
+            },
+            options: {
+              scales: {
+                y: {
+                  beginAtZero: false,
+                  title: { display: true, text: "Temperature (°C)" },
+                },
+              },
+              maintainAspectRatio: false,
+            },
+          });
+
+          humidityRef.current._chart = new window.Chart(humidityRef.current, {
+            type: "line",
+            data: {
+              labels,
+              datasets: humidityDatasets,
+            },
+            options: {
+              scales: {
+                y: {
+                  beginAtZero: false,
+                  title: { display: true, text: "Humidity (%)" },
+                },
+              },
+              maintainAspectRatio: false,
+            },
+          });
+
+          coRef.current._chart = new window.Chart(coRef.current, {
+            type: "line",
+            data: {
+              labels,
+              datasets: coDatasets,
+            },
+            options: {
+              scales: {
+                y: {
+                  beginAtZero: false,
+                  title: { display: true, text: "CO (ppm)" },
+                },
+              },
+              maintainAspectRatio: false,
+            },
+          });
+
+          co2Ref.current._chart = new window.Chart(co2Ref.current, {
+            type: "line",
+            data: {
+              labels,
+              datasets: co2Datasets,
+            },
+            options: {
+              scales: {
+                y: {
+                  beginAtZero: false,
+                  title: { display: true, text: "CO₂ (ppm)" },
+                },
+              },
+              maintainAspectRatio: false,
+            },
+          });
+        }
       });
 
-    // Fetch and process alerts data for tables (unchanged)
-    fetch(process.env.PUBLIC_URL + "/synthetic_alerts.jsonl")
-      .then(res => res.text())
+    // Fetch and process alerts data for tables (from alerts.jsonl file)
+    fetch("/alerts.jsonl")
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to load alerts.jsonl");
+        return res.text();
+      })
       .then(text => {
-        const alertData = text.trim().split('\n').map(line => JSON.parse(line));
+        // Parse JSONL file into array of objects
+        const alertData = text
+          .split("\n")
+          .filter(Boolean)
+          .map(line => {
+            try { return JSON.parse(line); } catch { return null; }
+          })
+          .filter(Boolean);
+        console.log('Raw alertData from alerts.jsonl:', alertData); // DEBUG
         const [dashboardYear, dashboardMonth, dashboardDay] = date.split("-").map(Number);
-        // Get all device IDs for this group
-        const allDeviceIds = [...new Set(alertData.map(row => row.device_id))]
-          .filter(id => id.startsWith(group));
+        // Use the same group-to-device mapping as the charts
+        const groupDeviceIds = group === "CARE-A"
+          ? ["Hillcrest-1", "Hillcrest-2"]
+          : ["Archview-1", "Archview-2"];
         // Filter alerts for selected date and group
         const filteredAlerts = alertData.filter(row => {
-          if (!row.device_id.startsWith(group)) return false;
+          if (!groupDeviceIds.includes(row.device_id)) return false;
           const d = new Date(row.timestamp);
           return (
             d.getUTCFullYear() === dashboardYear &&
@@ -284,7 +290,7 @@ function DashboardPage() {
 
         // Build tables for each alert type
         const tables = alertTypes.map(alertType => {
-          const tableRows = allDeviceIds.map(deviceId => {
+          const tableRows = groupDeviceIds.map(deviceId => {
             // Count alerts per period for this device and alert type
             const counts = periods.map(period => {
               let periodAlerts = filteredAlerts.filter(row => {
@@ -303,9 +309,19 @@ function DashboardPage() {
           });
           return { alertType, tableRows };
         });
+        console.log('Final alert tables:', tables); // DEBUG
         setAlertTables(tables);
+      })
+      .catch(err => {
+        console.error("Failed to load or parse alerts.jsonl:", err);
+        setAlertTables([]);
       });
   }, [group, date, labels]);
+
+  // Update device label when group changes
+  useEffect(() => {
+    setDeviceLabel(group === "CARE-A" ? "Hillcrest" : "Archview");
+  }, [group]);
 
   // Format date for header display (DD/MM/YYYY)
   let displayDate = date ? date.split("-").reverse().join("/") : "";
@@ -444,6 +460,11 @@ function DashboardPage() {
       </div>
       <div className="alerts-table-container">
         <h2 style={{textAlign:"center", color:"#1a5e8a", marginBottom:"18px"}}>Alert Counts by Device and Period</h2>
+        {alertTables.length === 0 && (
+          <div style={{textAlign:'center', color:'#888', marginBottom:16}}>
+            No alert tables to display for this date/group.
+          </div>
+        )}
         <div className="alerts-tables-row">
           {alertTables.map(({ alertType, tableRows }) => (
             <div className="alert-table-block" key={alertType}>
@@ -512,8 +533,14 @@ function getAverages(filtered, property) {
       const hour = new Date(row.timestamp).getUTCHours();
       return hour >= period.start && hour < period.end;
     });
-    return periodData.length > 0
-      ? periodData.reduce((sum, row) => sum + row[property], 0) / periodData.length
+    // For CO, keep zeros; for others, exclude zeros
+    const validData = periodData
+      .map(row => Number(row[property]))
+      .filter(val => typeof val === 'number' && !isNaN(val) && (property === 'co_ppm' || val !== 0));
+    // Debug log for troubleshooting
+    console.log(`Averaging for period: ${period.label}, property: ${property}, values:`, validData);
+    return validData.length > 0
+      ? validData.reduce((sum, val) => sum + val, 0) / validData.length
       : null;
   });
 }

@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./DeviceDashboardSelector.css";
 
-// Hillcrest House Nursing Home colour scheme
-const HILLCREST_COLORS = {
-  primary: "#a12c2f",      // deep red from logo
-  accent: "#e6b13a"        // gold/yellow from logo
-};
-
 // Device groups for selection
 const DEVICE_GROUPS = [
   { key: "CARE-A", label: "Hillcrest" },
@@ -21,27 +15,73 @@ const LIMITS = {
   co2: { max: 1000 }
 };
 
-// Status light component for environment indicators
-function StatusLight({ color, label }) {
+/**
+ * Four-way segmented status light for environment indicators
+ * @param {Object} props
+ * @param {Object} props.colors - Colors for each quadrant and center
+ * @param {Object} props.labels - Labels for each quadrant
+ */
+function FourWayStatusLight({ colors, labels }) {
+  // Helper to create a quarter-circle SVG path
+  function quarterPath(cx, cy, r, startAngle) {
+    const rad = (deg) => (Math.PI / 180) * deg;
+    const x1 = cx + r * Math.cos(rad(startAngle));
+    const y1 = cy + r * Math.sin(rad(startAngle));
+    const x2 = cx + r * Math.cos(rad(startAngle + 90));
+    const y2 = cx + r * Math.sin(rad(startAngle + 90));
+    return `M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z`;
+  }
+  // Tooltip labels for each quadrant
+  const tooltips = {
+    temperature: "Temperature",
+    humidity: "Humidity",
+    co: "CO (Carbon Monoxide)",
+    co2: "CO₂ (Carbon Dioxide)",
+    unreportedAlerts: "Unreported Alerts"
+  };
   return (
-    <div className="status-light">
-      <span className={`status-light-circle ${color}`}></span>
-      <span className="status-light-label" style={{
-        color: color === "red" ? "#c0392b" : "#222"
-      }}>
-        {label}
-      </span>
+    <div className="four-way-status-light">
+      <svg width="180" height="180" viewBox="0 0 180 180">
+        {/* Quadrant backgrounds with tooltips */}
+        <title>Environment Status Lights</title>
+        <g>
+          <path d={quarterPath(90, 90, 90, 180)} fill={colors.temperature} >
+            <title>{tooltips.temperature}</title>
+          </path>
+          <path d={quarterPath(90, 90, 90, 270)} fill={colors.humidity} >
+            <title>{tooltips.humidity}</title>
+          </path>
+          <path d={quarterPath(90, 90, 90, 0)} fill={colors.co} >
+            <title>{tooltips.co}</title>
+          </path>
+          <path d={quarterPath(90, 90, 90, 90)} fill={colors.co2} >
+            <title>{tooltips.co2}</title>
+          </path>
+        </g>
+        {/* Center white circle and alert indicator with tooltip */}
+        <circle cx="90" cy="90" r="40" fill="#fff" />
+        <circle cx="90" cy="90" r="36.5" fill={colors.unreportedAlerts || '#bdc3c7'}>
+          <title>{tooltips.unreportedAlerts}</title>
+        </circle>
+        {/* Quadrant labels */}
+        <text x="50" y="50" textAnchor="middle" fontWeight="bold" fontSize="18" fill="#222">T</text>
+        <text x="130" y="50" textAnchor="middle" fontWeight="bold" fontSize="18" fill="#222">H</text>
+        <text x="130" y="140" textAnchor="middle" fontWeight="bold" fontSize="18" fill="#222">CO</text>
+        <text x="50" y="140" textAnchor="middle" fontWeight="bold" fontSize="18" fill="#222">CO₂</text>
+      </svg>
     </div>
   );
 }
 
+/**
+ * Main dashboard selector component
+ */
 function DeviceDashboardSelector() {
   // State for available dates, selected group/date, alerts, and readings
   const [availableDates, setAvailableDates] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState("CARE-A");
   const [selectedDate, setSelectedDate] = useState("");
   const [unacknowledgedAlerts, setUnacknowledgedAlerts] = useState([]);
-  const [alertStatus, setAlertStatus] = useState("");
   const [systemStatus, setSystemStatus] = useState({
     temperature: "grey",
     humidity: "grey",
@@ -53,11 +93,13 @@ function DeviceDashboardSelector() {
 
   // Fetch available dates when group changes
   useEffect(() => {
-    fetch(`http://localhost:3001/api/available-dates?group=${selectedGroup}`)
+    fetch(`http://192.168.1.38:3001/api/available-dates?group=${selectedGroup}`)
       .then(res => res.json())
       .then(dates => {
-        setAvailableDates(dates);
-        setSelectedDate(dates[0] || "");
+        // Sort dates descending (latest first), ensure only valid date strings
+        const validDates = (dates || []).filter(Boolean).sort((a, b) => b.localeCompare(a));
+        setAvailableDates(validDates);
+        setSelectedDate(validDates[0] || "");
       });
   }, [selectedGroup]);
 
@@ -67,40 +109,47 @@ function DeviceDashboardSelector() {
   // Poll for latest readings and alerts
   useEffect(() => {
     fetchStatus(); // Initial fetch
-
-    const interval = setInterval(() => {
-      fetchStatus();
-    }, POLL_INTERVAL);
-
-    // Cleanup polling on unmount or group change
+    const interval = setInterval(() => { fetchStatus(); }, POLL_INTERVAL);
     return () => clearInterval(interval);
   }, [selectedGroup]);
 
   // Fetch latest environment readings and unacknowledged alerts
   function fetchStatus() {
     // Get latest environment readings for status lights
-    fetch("http://localhost:3001/api/latest-readings")
+    fetch("http://192.168.1.38:3001/api/latest-readings")
       .then(res => res.json())
       .then(data => {
-        setLatestReading(data);
+        // Use new backend values directly (already mapped to temperature, humidity, co, co2)
+        setLatestReading({
+          temperature: data.temperature ?? null,
+          humidity: data.humidity ?? null,
+          co: data.co ?? null,
+          co2: data.co2 ?? null
+        });
         setSystemStatus(prev => ({
           ...prev,
           temperature:
-            data.temperature < LIMITS.temperature.min || data.temperature > LIMITS.temperature.max
-              ? "red"
-              : "green",
+            typeof data.temperature === "number" && !isNaN(data.temperature) && data.temperature !== null
+              ? (data.temperature < LIMITS.temperature.min || data.temperature > LIMITS.temperature.max ? "red" : "green")
+              : "grey",
           humidity:
-            data.humidity < LIMITS.humidity.min || data.humidity > LIMITS.humidity.max
-              ? "red"
-              : "green",
-          co: data.co > LIMITS.co.max ? "red" : "green",
-          co2: data.co2 > LIMITS.co2.max ? "red" : "green"
+            typeof data.humidity === "number" && !isNaN(data.humidity) && data.humidity !== null
+              ? (data.humidity < LIMITS.humidity.min || data.humidity > LIMITS.humidity.max ? "red" : "green")
+              : "grey",
+          co:
+            typeof data.co === "number" && !isNaN(data.co) && data.co !== null
+              ? (data.co > LIMITS.co.max ? "red" : "green")
+              : "grey",
+          co2:
+            typeof data.co2 === "number" && !isNaN(data.co2) && data.co2 !== null
+              ? (data.co2 > LIMITS.co2.max ? "red" : "green")
+              : "grey"
         }));
       })
       .catch(() => setLatestReading(null));
 
     // Get unacknowledged alerts for alert status light and alert box
-    fetch("http://localhost:3001/api/unacknowledged-alerts")
+    fetch("http://192.168.1.38:3001/api/unacknowledged-alerts")
       .then(res => res.json())
       .then(data => {
         setSystemStatus(prev => ({
@@ -112,41 +161,25 @@ function DeviceDashboardSelector() {
   }
 
   // Go to dashboard for selected group and date
-  function handleGo() {
+  async function handleGo() {
     if (!selectedDate) return;
+    // Trigger backend to write JSONL files before navigating
+    try {
+      await fetch("http://192.168.1.38:3001/api/write-jsonl-for-date", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date: selectedDate, group: selectedGroup })
+      });
+    } catch (err) {
+      // Optionally handle error (could show a message)
+      console.error("Failed to write JSONL files:", err);
+    }
     window.location.href = `/dashboard?group=${selectedGroup}&date=${selectedDate}`;
   }
 
   // Check if a date is available for selection
   function isDateAvailable(dateStr) {
     return availableDates.includes(dateStr);
-  }
-
-  // Create a manual alert for testing
-  async function handleCreateAlert() {
-    const now = new Date();
-    const timestamp = now.toISOString().slice(0, 19).replace("T", " ");
-    const alertData = {
-      device_id: "CARE-A-RM1",
-      timestamp,
-      event_type: "Manual Alert",
-      severity: "Medium",
-      acknowledged: false
-    };
-    const res = await fetch("http://localhost:3001/api/create-alert", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(alertData)
-    });
-    if (res.ok) {
-      setAlertStatus("Alert created successfully.");
-      // Refresh alerts after creation
-      fetch("http://localhost:3001/api/unacknowledged-alerts")
-        .then(res => res.json())
-        .then(data => setUnacknowledgedAlerts(data.alerts || []));
-    } else {
-      setAlertStatus("Failed to create alert.");
-    }
   }
 
   // Format MySQL datetime string for display
@@ -186,247 +219,83 @@ function DeviceDashboardSelector() {
     <>
       {/* Environment status lights row */}
       <div className="lights-row">
-        <StatusLight
-          color={latestReading && typeof latestReading.temperature === "number" ? getLightColor("temperature", latestReading.temperature) : "grey"}
-          label={`Temperature${latestReading && typeof latestReading.temperature === "number" ? `: ${latestReading.temperature}°C` : ""}`}
+        <FourWayStatusLight
+          colors={{
+            temperature: latestReading && typeof latestReading.temperature === "number" ? getLightColor("temperature", latestReading.temperature) : "grey",
+            humidity: latestReading && typeof latestReading.humidity === "number" ? getLightColor("humidity", latestReading.humidity) : "grey",
+            co: latestReading && typeof latestReading.co === "number" ? getLightColor("co", latestReading.co) : "grey",
+            co2: latestReading && typeof latestReading.co2 === "number" ? getLightColor("co2", latestReading.co2) : "grey",
+            unreportedAlerts: systemStatus.unreportedAlerts
+          }}
+          labels={{}}
         />
-        <StatusLight
-          color={latestReading && typeof latestReading.humidity === "number" ? getLightColor("humidity", latestReading.humidity) : "grey"}
-          label={`Humidity${latestReading && typeof latestReading.humidity === "number" ? `: ${latestReading.humidity}%` : ""}`}
-        />
-        <StatusLight
-          color={latestReading && typeof latestReading.co === "number" ? getLightColor("co", latestReading.co) : "grey"}
-          label={`CO${latestReading && typeof latestReading.co === "number" ? `: ${latestReading.co} ppm` : ""}`}
-        />
-        <StatusLight
-          color={latestReading && typeof latestReading.co2 === "number" ? getLightColor("co2", latestReading.co2) : "grey"}
-          label={`CO₂${latestReading && typeof latestReading.co2 === "number" ? `: ${latestReading.co2} ppm` : ""}`}
-        />
-        <StatusLight color={systemStatus.unreportedAlerts} label="Unreported Alerts" />
+        {/* Unacknowledged Alerts status light (for mobile/alt view) */}
+        {/* <StatusLight color={systemStatus.unreportedAlerts} label="Unreported Alerts" /> */}
       </div>
 
       {/* Main dashboard container */}
       <div className="dashboard-container">
-        <div className="dashboard-row" style={{ alignItems: "flex-start" }}>
+        <div className="dashboard-row">
           {/* Left column: dashboard controls */}
-          <div className="dashboard-left" style={{ marginBottom: 0 }}>
-            <h2
-              style={{
-                color: HILLCREST_COLORS.primary,
-                marginBottom: "18px",
-                fontFamily: "'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif",
-                fontSize: "1.5em",
-                letterSpacing: "1px",
-                textAlign: "left"
-              }}
-            >
-              Select Dashboard
-            </h2>
+          <div className="dashboard-left">
+            <h2 className="dashboard-title">Select Dashboard</h2>
             {/* Device group selection buttons */}
-            <div style={{ marginBottom: "12px", textAlign: "left" }}>
+            <div className="group-buttons">
               {DEVICE_GROUPS.map((group) => (
                 <button
                   key={group.key}
                   onClick={() => setSelectedGroup(group.key)}
-                  style={{
-                    background:
-                      selectedGroup === group.key
-                        ? HILLCREST_COLORS.primary
-                        : HILLCREST_COLORS.buttonAccentBg,
-                    color:
-                      selectedGroup === group.key
-                        ? HILLCREST_COLORS.buttonText
-                        : HILLCREST_COLORS.buttonAccentText,
-                    border: "none",
-                    borderRadius: "6px",
-                    padding: "10px 18px",
-                    marginRight: "8px",
-                    fontWeight: "bold",
-                    fontSize: "1em",
-                    cursor: "pointer",
-                    boxShadow:
-                      selectedGroup === group.key
-                        ? "0 2px 8px #a12c2f44"
-                        : "none",
-                    fontFamily: "'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif"
-                  }}
+                  className={selectedGroup === group.key ? "selected" : ""}
                 >
                   {group.label}
                 </button>
               ))}
             </div>
             {/* Date picker */}
-            <div style={{ marginBottom: "16px", textAlign: "left" }}>
-              <label
-                style={{
-                  marginRight: "8px",
-                  fontWeight: "bold",
-                  color: HILLCREST_COLORS.text,
-                  fontSize: "1em",
-                  fontFamily: "'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif"
-                }}
-              >
-                Date:
-              </label>
+            <div className="date-picker-row">
+              <label className="date-label">Date:</label>
               <input
                 type="date"
                 value={selectedDate}
-                onClick={(e) =>
-                  e.target.showPicker && e.target.showPicker()
-                }
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
                 onChange={(e) => {
                   const val = e.target.value;
                   if (isDateAvailable(val)) setSelectedDate(val);
                 }}
-                min={
-                  availableDates.length
-                    ? availableDates[availableDates.length - 1]
-                    : ""
-                }
+                min={availableDates.length ? availableDates[availableDates.length - 1] : ""}
                 max={availableDates.length ? availableDates[0] : ""}
-                style={{
-                  fontSize: "1em",
-                  padding: "8px 12px",
-                  borderRadius: "6px",
-                  border: `2px solid ${HILLCREST_COLORS.primary}`,
-                  background: "#fff",
-                  color: HILLCREST_COLORS.text,
-                  fontWeight: "bold",
-                  fontFamily: "'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif"
-                }}
+                className="date-input"
               />
             </div>
             {/* Go to dashboard button */}
             <button
               onClick={handleGo}
               disabled={!selectedDate}
-              style={{
-                background: HILLCREST_COLORS.primary,
-                color: HILLCREST_COLORS.buttonText,
-                border: "none",
-                borderRadius: "6px",
-                padding: "12px 24px",
-                fontWeight: "bold",
-                fontSize: "1.1em",
-                cursor: "pointer",
-                boxShadow: "0 2px 8px #a12c2f22",
-                marginBottom: "10px",
-                width: "100%",
-                maxWidth: "220px",
-                fontFamily: "'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif"
-              }}
+              className="go-dashboard-btn"
             >
               Go to {DEVICE_GROUPS.find((g) => g.key === selectedGroup).label} Dashboard
             </button>
-            {/* Create alert button */}
-            <button
-              style={{
-                background: "#c0392b",
-                color: "#fff",
-                border: "none",
-                borderRadius: "6px",
-                padding: "10px 18px",
-                fontWeight: "bold",
-                fontSize: "1em",
-                cursor: "pointer",
-                marginTop: "12px",
-                width: "100%",
-                maxWidth: "220px",
-                fontFamily: "'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif"
-              }}
-              onClick={handleCreateAlert}
-            >
-              Create Alert (Test)
-            </button>
-            {/* Alert creation status message */}
-            {alertStatus && (
-              <div style={{
-                color: "#e74c3c",
-                marginTop: "10px",
-                textAlign: "left",
-                fontSize: "1em",
-                fontFamily: "'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif"
-              }}>
-                {alertStatus}
-              </div>
-            )}
           </div>
           {/* Right column: Fill Out Accident Report button and Unacknowledged Alerts */}
-          <div className="dashboard-right" style={{ marginTop: 0 }}>
+          <div className="dashboard-right">
             {/* Fill Out Accident Report button */}
             <button
-              style={{
-                background: HILLCREST_COLORS.accent,
-                color: HILLCREST_COLORS.buttonAccentText,
-                border: "none",
-                borderRadius: "6px",
-                padding: "10px 18px",
-                fontWeight: "bold",
-                fontSize: "1em",
-                cursor: "pointer",
-                marginBottom: "18px",
-                boxShadow: "0 2px 8px #e6b13a44",
-                width: "100%",
-                maxWidth: "220px",
-                fontFamily: "'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif"
-              }}
+              className="accident-report-btn"
               onClick={() => window.open("/accident-report-pdf", "_blank")}
             >
               Fill Out Accident Report
             </button>
             {/* Unacknowledged alerts box */}
             {unacknowledgedAlerts.length > 0 && (
-              <div
-                style={{
-                  marginTop: "0",
-                  background: "#fffbe6",
-                  border: `1px solid ${HILLCREST_COLORS.accent}`,
-                  borderRadius: "8px",
-                  boxShadow: "0 1px 6px #e6b13a22",
-                  padding: "12px 14px",
-                  textAlign: "left",
-                  maxWidth: "260px",
-                  marginLeft: "auto",
-                  marginRight: "auto",
-                  fontSize: "1em",
-                  fontFamily: "'Arial Rounded MT Bold', Arial, 'Helvetica Neue', Helvetica, sans-serif"
-                }}
-              >
-                <div
-                  style={{
-                    color: HILLCREST_COLORS.accent,
-                    fontWeight: "bold",
-                    marginBottom: "10px",
-                    fontSize: "1em"
-                  }}
-                >
+              <div className="unacknowledged-alerts-box">
+                <div className="unacknowledged-alerts-title">
                   Unacknowledged Alerts ({unacknowledgedAlerts.length})
                 </div>
                 {unacknowledgedAlerts.map((alert, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      marginBottom: "10px",
-                      paddingBottom: "8px",
-                      borderBottom:
-                        idx !== unacknowledgedAlerts.length - 1
-                          ? "2px solid #e67e22"
-                          : "none",
-                      fontSize: "0.95em"
-                    }}
-                  >
-                    <div style={{ color: HILLCREST_COLORS.text, marginBottom: "2px" }}>
-                      <b>Device:</b> {alert.device_id}
-                    </div>
-                    <div style={{ color: HILLCREST_COLORS.text, marginBottom: "2px" }}>
-                      <b>Time:</b> {formatAlertDate(alert.timestamp)}
-                    </div>
-                    <div style={{ color: HILLCREST_COLORS.text, marginBottom: "2px" }}>
-                      <b>Type:</b> {alert.event_type}
-                    </div>
-                    <div style={{ color: HILLCREST_COLORS.text }}>
-                      <b>Severity:</b> {alert.severity}
-                    </div>
+                  <div key={idx} className="unacknowledged-alert-item">
+                    <div><b>Device:</b> {alert.device_id}</div>
+                    <div><b>Time:</b> {formatAlertDate(alert.timestamp)}</div>
+                    <div><b>Type:</b> {alert.event_type}</div>
                   </div>
                 ))}
               </div>

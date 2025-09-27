@@ -12,16 +12,16 @@ const connectionConfig = {
 
 router.get("/api/available-dates", async (req, res) => {
   const group = req.query.group; // "CARE-A" or "CARE-B"
-  let devicePrefix = group === "CARE-A" ? "CARE-A" : "CARE-B";
+  let devicePrefix = group === "CARE-A" ? "Hillcrest-1" : "Archview-1";
 
   try {
     const connection = await mysql.createConnection(connectionConfig);
     const [rows] = await connection.execute(
       `SELECT DISTINCT DATE_FORMAT(timestamp, '%Y-%m-%d') as date
        FROM environment_readings
-       WHERE device_id LIKE ?
+       WHERE device_id = ?
        ORDER BY date DESC`,
-      [`${devicePrefix}%`]
+      [devicePrefix]
     );
     await connection.end();
 
