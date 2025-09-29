@@ -16,12 +16,12 @@ const options = {
   rejectUnauthorized: false // Only use this for testing/self-signed certs
 };
 
-const deviceID = "901ba6defd0eaf9582842d145a9cfaec973232d6a358ea0c82900bd6fa1bd616";
-const deviceID2 = "a23642c514657abb08966a6d1227360e69e9e6c196724280257effc11602f6de";
-const device_id = "Hillcrest-1";
-const device_id2 = "Hillcrest-2";
+const deviceID = "f0fd4bcca17de85077fe7383abcb0450d11ae9ec0fa544c00e4d5cdc425d07f1";
+const deviceID2 = "f2d75de59d951ef7166209d00174a0d1370c6472821f280b17e923138bd93ce9";
+const device_id = "Archview-1";
+const device_id2 = "Archview-2";
 const topics = [
-  // Hillcrest-1 topics
+  // Archview-1 topics
   `alive/${deviceID}/sensors/TEMPERATURE`,
   `alive/${deviceID}/sensors/HUMIDITY`,
   `alive/${deviceID}/sensors/CO`,
@@ -30,7 +30,7 @@ const topics = [
   `alive/${deviceID}/alarm/oob`,
   `alive/${deviceID}/alarm/oor`,
   `alive/${deviceID}/alarm/help_call`,
-  // Hillcrest-2 topics
+  // Archview-2 topics
   `alive/${deviceID2}/sensors/TEMPERATURE`,
   `alive/${deviceID2}/sensors/HUMIDITY`,
   `alive/${deviceID2}/sensors/CO`,
