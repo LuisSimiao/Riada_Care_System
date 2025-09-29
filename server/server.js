@@ -13,7 +13,12 @@ const acknowledgeAlertRouter = require("./acknowledgeAlert");
 const app = express();
 
 // Enable CORS for frontend requests
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "http://192.168.1.82:3000"
+  ]
+}));
 app.use(express.json());
 
 // Register API routers

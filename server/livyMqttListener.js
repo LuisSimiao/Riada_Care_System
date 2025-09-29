@@ -3,6 +3,7 @@
 
 const mqtt = require("mqtt");
 const db = require("./db"); // Database connection
+const { decrypt, encrypt } = require("./encryption");
 
 // MQTT connection options for secure (TLS) connection
 const options = {
@@ -16,17 +17,28 @@ const options = {
 };
 
 const deviceID = "901ba6defd0eaf9582842d145a9cfaec973232d6a358ea0c82900bd6fa1bd616";
+const deviceID2 = "a23642c514657abb08966a6d1227360e69e9e6c196724280257effc11602f6de";
 const device_id = "Hillcrest-1";
+const device_id2 = "Hillcrest-2";
 const topics = [
+  // Hillcrest-1 topics
   `alive/${deviceID}/sensors/TEMPERATURE`,
   `alive/${deviceID}/sensors/HUMIDITY`,
   `alive/${deviceID}/sensors/CO`,
   `alive/${deviceID}/sensors/CO2`,
-  // Alarm topics
   `alive/${deviceID}/alarm/fall`,
   `alive/${deviceID}/alarm/oob`,
   `alive/${deviceID}/alarm/oor`,
-  `alive/${deviceID}/alarm/help_call`
+  `alive/${deviceID}/alarm/help_call`,
+  // Hillcrest-2 topics
+  `alive/${deviceID2}/sensors/TEMPERATURE`,
+  `alive/${deviceID2}/sensors/HUMIDITY`,
+  `alive/${deviceID2}/sensors/CO`,
+  `alive/${deviceID2}/sensors/CO2`,
+  `alive/${deviceID2}/alarm/fall`,
+  `alive/${deviceID2}/alarm/oob`,
+  `alive/${deviceID2}/alarm/oor`,
+  `alive/${deviceID2}/alarm/help_call`
 ];
 
 let client = null;
@@ -81,7 +93,9 @@ function connectAndSubscribe() {
         if (topicParts.length >= 4) {
           // Map deviceID to friendly device_id if needed
           if (topicParts[1] === deviceID) {
-            topicDeviceId = device_id; // Use friendly name if matches known deviceID
+            topicDeviceId = device_id; // Hillcrest-1
+          } else if (topicParts[1] === deviceID2) {
+            topicDeviceId = device_id2; // Hillcrest-2
           } else {
             topicDeviceId = topicParts[1]; // Otherwise use raw deviceID
           }
@@ -102,7 +116,7 @@ function connectAndSubscribe() {
         }
         db.query(
           `INSERT INTO alerts (device_id, timestamp, event_type, acknowledged) VALUES (?, ?, ?, ?)`,
-          [topicDeviceId, timestamp, eventType, acknowledged],
+          [encrypt(topicDeviceId), encrypt(timestamp), encrypt(eventType), acknowledged],
           (err, result) => {
             if (err) {
               console.error(`[ALERT] Failed to insert alert (${eventType}):`, err, { topicDeviceId, timestamp, eventType });
@@ -145,7 +159,7 @@ function connectAndSubscribe() {
       if (value === null) {
         db.query(
           `SELECT ${column} FROM environment_readings WHERE device_id = ? AND ${column} IS NOT NULL ORDER BY timestamp DESC LIMIT 1`,
-          [device_id],
+          [encrypt(device_id)],
           (err, results) => {
             if (err) {
               console.error(`Failed to fetch previous ${column} value:`, err);
@@ -165,7 +179,7 @@ function connectAndSubscribe() {
           db.query(
             `INSERT INTO environment_readings (device_id, timestamp, ${column}) VALUES (?, ?, ?)
              ON DUPLICATE KEY UPDATE ${column} = VALUES(${column})`,
-            [device_id, timestamp, value],
+            [encrypt(device_id), encrypt(timestamp), encrypt(value)],
             (err) => {
               if (err) console.error(`Failed to upsert ${column} reading:`, err);
               else console.log(`${column} reading upserted:`, { device_id, value, timestamp });

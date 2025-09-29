@@ -36,7 +36,7 @@ const hillcrestColors = [
   "#27ae60"  // Hillcrest green
 ];
 
-function DashboardPage() {
+function DashboardPage({ onLogout }) {
   const navigate = useNavigate();
   const query = useQuery();
   const group = query.get("group") || "CARE-A";
@@ -61,7 +61,7 @@ function DashboardPage() {
     if (!date) return;
 
     // Fetch environment data for the selected date from backend (MySQL)
-    fetch(`http://192.168.1.38:3001/api/environment-data?group=${group}&date=${date}`, {
+    fetch(`http://192.168.1.82:3001/api/environment-data?group=${group}&date=${date}`, {
       method: "GET"
     })
       .then(res => res.json())

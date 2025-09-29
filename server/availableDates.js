@@ -1,5 +1,6 @@
 const express = require("express");
 const mysql = require("mysql2/promise");
+const { decrypt } = require("./encryption");
 
 const router = express.Router();
 
@@ -17,16 +18,21 @@ router.get("/api/available-dates", async (req, res) => {
   try {
     const connection = await mysql.createConnection(connectionConfig);
     const [rows] = await connection.execute(
-      `SELECT DISTINCT DATE_FORMAT(timestamp, '%Y-%m-%d') as date
-       FROM environment_readings
-       WHERE device_id = ?
-       ORDER BY date DESC`,
-      [devicePrefix]
+      `SELECT DISTINCT timestamp FROM environment_readings WHERE device_id = ? ORDER BY timestamp DESC`,
+      [decrypt(devicePrefix)]
     );
     await connection.end();
 
-    // Dates are now strings in YYYY-MM-DD format, no timezone conversion
-    const dates = rows.map(row => row.date);
+    // Decrypt timestamps and extract unique dates
+    const datesSet = new Set();
+    rows.forEach(row => {
+      const ts = decrypt(row.timestamp);
+      if (ts) {
+        const date = ts.slice(0, 10); // YYYY-MM-DD
+        datesSet.add(date);
+      }
+    });
+    const dates = Array.from(datesSet).sort((a, b) => b.localeCompare(a));
     res.json(dates);
   } catch (err) {
     res.status(500).json({ error: err.message });

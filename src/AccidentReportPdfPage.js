@@ -3,7 +3,7 @@ import { PDFDocument } from "pdf-lib";
 import "./AccidentReportPdfPage.css";
 
 // Main component for the Accident/Incident Report PDF form
-function AccidentReportPdfPage() {
+function AccidentReportPdfPage({ onLogout }) {
   // State for all form fields
   const [form, setForm] = useState({
     text_1zzfy: "",      // Name
@@ -67,7 +67,7 @@ function AccidentReportPdfPage() {
 
       // Send PDF to backend, including location, accident date, and time in query params
       const res = await fetch(
-        `http://192.168.1.38:3001/api/save-accident-report-pdf?location=${location}&date=${form.text_2ovd}&time=${form.text_3hlzs}`,
+        `http://192.168.1.82:3001/api/save-accident-report-pdf?location=${location}&date=${form.text_2ovd}&time=${form.text_3hlzs}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/pdf" },
@@ -80,7 +80,7 @@ function AccidentReportPdfPage() {
       const reportTime = form.text_3hlzs;  // adjust to your time field name
 
       // Send to backend to acknowledge matching alerts
-      await fetch("http://192.168.1.38:3001/api/acknowledge-alert", {
+      await fetch("http://192.168.1.82:3001/api/acknowledge-alert", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -76,12 +76,13 @@ function FourWayStatusLight({ colors, labels }) {
 /**
  * Main dashboard selector component
  */
-function DeviceDashboardSelector() {
+function DeviceDashboardSelector({ onLogout }) {
   // State for available dates, selected group/date, alerts, and readings
   const [availableDates, setAvailableDates] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState("CARE-A");
   const [selectedDate, setSelectedDate] = useState("");
   const [unacknowledgedAlerts, setUnacknowledgedAlerts] = useState([]);
+  const [deviceAlertStatus, setDeviceAlertStatus] = useState({ "Hillcrest-1": "green", "Hillcrest-2": "green" });
   const [systemStatus, setSystemStatus] = useState({
     temperature: "grey",
     humidity: "grey",
@@ -90,10 +91,11 @@ function DeviceDashboardSelector() {
     unreportedAlerts: "grey"
   });
   const [latestReading, setLatestReading] = useState(null);
+  const [latestReadings, setLatestReadings] = useState({});
 
   // Fetch available dates when group changes
   useEffect(() => {
-    fetch(`http://192.168.1.38:3001/api/available-dates?group=${selectedGroup}`)
+    fetch(`http://192.168.1.82:3001/api/available-dates?group=${selectedGroup}`)
       .then(res => res.json())
       .then(dates => {
         // Sort dates descending (latest first), ensure only valid date strings
@@ -115,66 +117,64 @@ function DeviceDashboardSelector() {
 
   // Fetch latest environment readings and unacknowledged alerts
   function fetchStatus() {
-    // Get latest environment readings for status lights
-    fetch("http://192.168.1.38:3001/api/latest-readings")
+    // Get latest environment readings for both status wheels
+    fetch("http://192.168.1.82:3001/api/latest-readings")
       .then(res => res.json())
       .then(data => {
-        // Use new backend values directly (already mapped to temperature, humidity, co, co2)
-        setLatestReading({
-          temperature: data.temperature ?? null,
-          humidity: data.humidity ?? null,
-          co: data.co ?? null,
-          co2: data.co2 ?? null
-        });
+        setLatestReadings(data || {});
+        // For backward compatibility, also set the first device as latestReading
+        setLatestReading(data["Hillcrest-1"] || null);
         setSystemStatus(prev => ({
           ...prev,
           temperature:
-            typeof data.temperature === "number" && !isNaN(data.temperature) && data.temperature !== null
-              ? (data.temperature < LIMITS.temperature.min || data.temperature > LIMITS.temperature.max ? "red" : "green")
+            typeof (data["Hillcrest-1"]?.temperature) === "number" && !isNaN(data["Hillcrest-1"].temperature)
+              ? (data["Hillcrest-1"].temperature < LIMITS.temperature.min || data["Hillcrest-1"].temperature > LIMITS.temperature.max ? "red" : "green")
               : "grey",
           humidity:
-            typeof data.humidity === "number" && !isNaN(data.humidity) && data.humidity !== null
-              ? (data.humidity < LIMITS.humidity.min || data.humidity > LIMITS.humidity.max ? "red" : "green")
+            typeof (data["Hillcrest-1"]?.humidity) === "number" && !isNaN(data["Hillcrest-1"].humidity)
+              ? (data["Hillcrest-1"].humidity < LIMITS.humidity.min || data["Hillcrest-1"].humidity > LIMITS.humidity.max ? "red" : "green")
               : "grey",
           co:
-            typeof data.co === "number" && !isNaN(data.co) && data.co !== null
-              ? (data.co > LIMITS.co.max ? "red" : "green")
+            typeof (data["Hillcrest-1"]?.co) === "number" && !isNaN(data["Hillcrest-1"].co)
+              ? (data["Hillcrest-1"].co > LIMITS.co.max ? "red" : "green")
               : "grey",
           co2:
-            typeof data.co2 === "number" && !isNaN(data.co2) && data.co2 !== null
-              ? (data.co2 > LIMITS.co2.max ? "red" : "green")
+            typeof (data["Hillcrest-1"]?.co2) === "number" && !isNaN(data["Hillcrest-1"].co2)
+              ? (data["Hillcrest-1"].co2 > LIMITS.co2.max ? "red" : "green")
               : "grey"
         }));
       })
       .catch(() => setLatestReading(null));
 
     // Get unacknowledged alerts for alert status light and alert box
-    fetch("http://192.168.1.38:3001/api/unacknowledged-alerts")
+    fetch("http://192.168.1.82:3001/api/unacknowledged-alerts")
       .then(res => res.json())
       .then(data => {
-        setSystemStatus(prev => ({
-          ...prev,
-          unreportedAlerts: (data.alerts && data.alerts.length > 0) ? "red" : "green"
-        }));
         setUnacknowledgedAlerts(data.alerts || []);
+        // Compute alert status per device
+        const status = { "Hillcrest-1": "green", "Hillcrest-2": "green" };
+        (data.alerts || []).forEach(alert => {
+          if (alert.device_id === "Hillcrest-1") status["Hillcrest-1"] = "red";
+          if (alert.device_id === "Hillcrest-2") status["Hillcrest-2"] = "red";
+        });
+        setDeviceAlertStatus(status);
       });
   }
 
   // Go to dashboard for selected group and date
   async function handleGo() {
     if (!selectedDate) return;
-    // Trigger backend to write JSONL files before navigating
     try {
-      await fetch("http://192.168.1.38:3001/api/write-jsonl-for-date", {
+      await fetch("http://192.168.1.82:3001/api/write-jsonl-for-date", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date: selectedDate, group: selectedGroup })
       });
     } catch (err) {
-      // Optionally handle error (could show a message)
       console.error("Failed to write JSONL files:", err);
     }
-    window.location.href = `/dashboard?group=${selectedGroup}&date=${selectedDate}`;
+    // Open dashboard in a new tab, like the accident report button
+    window.open(`/dashboard?group=${selectedGroup}&date=${selectedDate}`, "_blank");
   }
 
   // Check if a date is available for selection
@@ -218,19 +218,33 @@ function DeviceDashboardSelector() {
   return (
     <>
       {/* Environment status lights row */}
-      <div className="lights-row">
-        <FourWayStatusLight
-          colors={{
-            temperature: latestReading && typeof latestReading.temperature === "number" ? getLightColor("temperature", latestReading.temperature) : "grey",
-            humidity: latestReading && typeof latestReading.humidity === "number" ? getLightColor("humidity", latestReading.humidity) : "grey",
-            co: latestReading && typeof latestReading.co === "number" ? getLightColor("co", latestReading.co) : "grey",
-            co2: latestReading && typeof latestReading.co2 === "number" ? getLightColor("co2", latestReading.co2) : "grey",
-            unreportedAlerts: systemStatus.unreportedAlerts
-          }}
-          labels={{}}
-        />
-        {/* Unacknowledged Alerts status light (for mobile/alt view) */}
-        {/* <StatusLight color={systemStatus.unreportedAlerts} label="Unreported Alerts" /> */}
+      <div className="lights-row" style={{ display: 'flex', gap: '2rem', justifyContent: 'center' }}>
+        <div>
+          <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 4 }}>Hillcrest-1</div>
+          <FourWayStatusLight
+            colors={{
+              temperature: latestReadings["Hillcrest-1"] && typeof latestReadings["Hillcrest-1"].temperature === "number" ? getLightColor("temperature", latestReadings["Hillcrest-1"].temperature) : "grey",
+              humidity: latestReadings["Hillcrest-1"] && typeof latestReadings["Hillcrest-1"].humidity === "number" ? getLightColor("humidity", latestReadings["Hillcrest-1"].humidity) : "grey",
+              co: latestReadings["Hillcrest-1"] && typeof latestReadings["Hillcrest-1"].co === "number" ? getLightColor("co", latestReadings["Hillcrest-1"].co) : "grey",
+              co2: latestReadings["Hillcrest-1"] && typeof latestReadings["Hillcrest-1"].co2 === "number" ? getLightColor("co2", latestReadings["Hillcrest-1"].co2) : "grey",
+              unreportedAlerts: deviceAlertStatus["Hillcrest-1"]
+            }}
+            labels={{}}
+          />
+        </div>
+        <div>
+          <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 4 }}>Hillcrest-2</div>
+          <FourWayStatusLight
+            colors={{
+              temperature: latestReadings["Hillcrest-2"] && typeof latestReadings["Hillcrest-2"].temperature === "number" ? getLightColor("temperature", latestReadings["Hillcrest-2"].temperature) : "grey",
+              humidity: latestReadings["Hillcrest-2"] && typeof latestReadings["Hillcrest-2"].humidity === "number" ? getLightColor("humidity", latestReadings["Hillcrest-2"].humidity) : "grey",
+              co: latestReadings["Hillcrest-2"] && typeof latestReadings["Hillcrest-2"].co === "number" ? getLightColor("co", latestReadings["Hillcrest-2"].co) : "grey",
+              co2: latestReadings["Hillcrest-2"] && typeof latestReadings["Hillcrest-2"].co2 === "number" ? getLightColor("co2", latestReadings["Hillcrest-2"].co2) : "grey",
+              unreportedAlerts: deviceAlertStatus["Hillcrest-2"]
+            }}
+            labels={{}}
+          />
+        </div>
       </div>
 
       {/* Main dashboard container */}

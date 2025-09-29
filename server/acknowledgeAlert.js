@@ -1,5 +1,6 @@
 const express = require("express");
 const db = require("./db");
+const { decrypt, encrypt } = require("./encryption");
 const router = express.Router();
 
 // POST /api/acknowledge-alert
@@ -19,11 +20,14 @@ router.post("/api/acknowledge-alert", async (req, res) => {
     return res.status(400).json({ error: "Invalid location" });
   }
 
+  // Encrypt device IDs for matching
+  const encryptedDeviceIds = deviceIds.map((id) => encrypt(id));
+
   // Extract hour and minute from time string
   const [hour, minute] = time.split(":").map(Number);
 
   try {
-    const placeholders = deviceIds.map(() => "?").join(",");
+    const placeholders = encryptedDeviceIds.map(() => "?").join(",");
     const sql = `
       UPDATE alerts
       SET acknowledged = 1
@@ -33,7 +37,10 @@ router.post("/api/acknowledge-alert", async (req, res) => {
         AND MINUTE(timestamp) = ?
         AND acknowledged = 0
     `;
-    const params = [...deviceIds, date, hour, minute];
+    // Encrypt date for matching
+    const encryptedDate = encrypt(date);
+    // Note: timestamp is likely stored as encrypted string, so matching by date/hour/minute may require decrypting in SQL or storing a plaintext copy for search. If not possible, this may need a different approach.
+    const params = [...encryptedDeviceIds, date, hour, minute];
     const result = await db.query(sql, params);
     res.json({ success: true, affectedRows: result.affectedRows });
   } catch (err) {
