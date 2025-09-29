@@ -116,7 +116,7 @@ function connectAndSubscribe() {
         }
         db.query(
           `INSERT INTO alerts (device_id, timestamp, event_type, acknowledged) VALUES (?, ?, ?, ?)`,
-          [encrypt(topicDeviceId), encrypt(timestamp), encrypt(eventType), acknowledged],
+          [topicDeviceId, timestamp, encrypt(eventType), acknowledged],
           (err, result) => {
             if (err) {
               console.error(`[ALERT] Failed to insert alert (${eventType}):`, err, { topicDeviceId, timestamp, eventType });
@@ -159,7 +159,7 @@ function connectAndSubscribe() {
       if (value === null) {
         db.query(
           `SELECT ${column} FROM environment_readings WHERE device_id = ? AND ${column} IS NOT NULL ORDER BY timestamp DESC LIMIT 1`,
-          [encrypt(device_id)],
+          [device_id],
           (err, results) => {
             if (err) {
               console.error(`Failed to fetch previous ${column} value:`, err);
@@ -179,7 +179,7 @@ function connectAndSubscribe() {
           db.query(
             `INSERT INTO environment_readings (device_id, timestamp, ${column}) VALUES (?, ?, ?)
              ON DUPLICATE KEY UPDATE ${column} = VALUES(${column})`,
-            [encrypt(device_id), encrypt(timestamp), encrypt(value)],
+            [device_id, timestamp, encrypt(value)],
             (err) => {
               if (err) console.error(`Failed to upsert ${column} reading:`, err);
               else console.log(`${column} reading upserted:`, { device_id, value, timestamp });

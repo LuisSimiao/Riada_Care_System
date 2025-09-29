@@ -98,8 +98,9 @@ function DeviceDashboardSelector({ onLogout }) {
     fetch(`http://192.168.1.82:3001/api/available-dates?group=${selectedGroup}`)
       .then(res => res.json())
       .then(dates => {
-        // Sort dates descending (latest first), ensure only valid date strings
-        const validDates = (dates || []).filter(Boolean).sort((a, b) => b.localeCompare(a));
+        // Support both array and object with 'dates' property
+        const dateArray = Array.isArray(dates) ? dates : (Array.isArray(dates.dates) ? dates.dates : []);
+        const validDates = dateArray.filter(Boolean).sort((a, b) => b.localeCompare(a));
         setAvailableDates(validDates);
         setSelectedDate(validDates[0] || "");
       });
@@ -173,8 +174,8 @@ function DeviceDashboardSelector({ onLogout }) {
     } catch (err) {
       console.error("Failed to write JSONL files:", err);
     }
-    // Open dashboard in a new tab, like the accident report button
-    window.open(`/dashboard?group=${selectedGroup}&date=${selectedDate}`, "_blank");
+    // Instead of opening a new tab, navigate in the same page
+    window.location.href = `/dashboard?group=${selectedGroup}&date=${selectedDate}`;
   }
 
   // Check if a date is available for selection

@@ -40,7 +40,10 @@ function DashboardPage({ onLogout }) {
   const navigate = useNavigate();
   const query = useQuery();
   const group = query.get("group") || "CARE-A";
-  const date = query.get("date") || "";
+  // Sanitize date: only allow YYYY-MM-DD
+  const rawDate = query.get("date") || "";
+  const dateMatch = (rawDate || "").match(/^\d{4}-\d{2}-\d{2}$/);
+  const date = dateMatch ? dateMatch[0] : "";
 
   const tempRef = useRef();
   const humidityRef = useRef();
@@ -67,7 +70,7 @@ function DashboardPage({ onLogout }) {
       .then(res => res.json())
       .then(data => {
         // Now use the fetched 'data' directly for chart rendering
-        const parsedData = data; // Use the data directly
+        const parsedData = Array.isArray(data) ? data : [];
         console.log('Fetched parsedData:', parsedData); // DEBUG
         const [dashboardYear, dashboardMonth, dashboardDay] = date.split("-").map(Number);
 

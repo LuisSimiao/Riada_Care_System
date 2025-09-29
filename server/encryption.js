@@ -2,6 +2,10 @@ const crypto = require('crypto');
 const ENCRYPTION_KEY = process.env.AES_KEY
   ? Buffer.from(process.env.AES_KEY, 'base64')
   : crypto.randomBytes(32); // fallback for dev
+
+// Debug log to verify key is loaded correctly
+console.log('[encryption.js] ENCRYPTION_KEY length:', ENCRYPTION_KEY.length, 'First 6 bytes:', ENCRYPTION_KEY.toString('hex').slice(0, 12));
+
 const IV_LENGTH = 16; // AES block size
 
 function encrypt(text) {

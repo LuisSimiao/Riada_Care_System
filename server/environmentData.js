@@ -1,15 +1,8 @@
 const express = require("express");
-const mysql = require("mysql2/promise");
+const db = require("./db");
 const { decrypt } = require("./encryption");
 
 const router = express.Router();
-
-const connectionConfig = {
-  host: "localhost",
-  user: "root",
-  password: "password",
-  database: "hillcrest-database"
-};
 
 router.get("/api/environment-data", async (req, res) => {
   const group = req.query.group || "CARE-A";
@@ -25,31 +18,28 @@ router.get("/api/environment-data", async (req, res) => {
     deviceIds = ["Archview-1", "Archview-2"];
   }
 
-  try {
-    const connection = await mysql.createConnection(connectionConfig);
-    // Use device_id IN (?, ?) for the two device IDs
-    const [rows] = await connection.execute(
-      `SELECT device_id, DATE_FORMAT(timestamp, '%Y-%m-%d %H:%i:%s') as timestamp, temperature_c, humidity_percent, co_ppm, co2_ppm
-       FROM environment_readings
-       WHERE device_id IN (?, ?)
-         AND DATE(timestamp) = ?
-       ORDER BY timestamp ASC`,
-      [...deviceIds, date]
-    );
-    await connection.end();
-    // Decrypt all fields in each row
-    const decryptedRows = rows.map(row => ({
-      device_id: decrypt(row.device_id),
-      timestamp: decrypt(row.timestamp),
-      temperature_c: parseFloat(decrypt(row.temperature_c)),
-      humidity_percent: parseFloat(decrypt(row.humidity_percent)),
-      co_ppm: parseFloat(decrypt(row.co_ppm)),
-      co2_ppm: parseFloat(decrypt(row.co2_ppm))
-    }));
-    res.json(decryptedRows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  db.query(
+    `SELECT device_id, DATE_FORMAT(timestamp, '%Y-%m-%d %H:%i:%s') as timestamp, temperature_c, humidity_percent, co_ppm, co2_ppm
+     FROM environment_readings
+     WHERE device_id IN (?) AND DATE(timestamp) = ?
+     ORDER BY timestamp ASC`,
+    [deviceIds, date],
+    (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      // Only decrypt sensor values, not device_id or timestamp
+      const resultRows = rows.map(row => ({
+        device_id: row.device_id,
+        timestamp: row.timestamp,
+        temperature_c: row.temperature_c ? parseFloat(decrypt(row.temperature_c)) : null,
+        humidity_percent: row.humidity_percent ? parseFloat(decrypt(row.humidity_percent)) : null,
+        co_ppm: row.co_ppm ? parseFloat(decrypt(row.co_ppm)) : null,
+        co2_ppm: row.co2_ppm ? parseFloat(decrypt(row.co2_ppm)) : null
+      }));
+      res.json(resultRows);
+    }
+  );
 });
 
 module.exports = router;

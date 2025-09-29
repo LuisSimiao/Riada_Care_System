@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const db = require("./db"); // adjust path to your db connection
-const { decrypt } = require("./encryption");
 
 // Get the most recent non-null readings for each sensor for both Hillcrest-1 and Hillcrest-2
 router.get("/api/latest-readings", (req, res) => {
@@ -29,7 +28,7 @@ router.get("/api/latest-readings", (req, res) => {
           hasError = true;
           return res.status(500).json({ error: "Database error." });
         }
-        result[device_id][key] = rows.length ? parseFloat(decrypt(Object.values(rows[0])[0])) : null;
+        result[device_id][key] = rows.length ? parseFloat(require("./encryption").decrypt(Object.values(rows[0])[0])) : null;
         subCompleted++;
         if (subCompleted === 4) {
           completed++;
