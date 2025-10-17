@@ -3,8 +3,7 @@ import "./DeviceDashboardSelector.css";
 
 // Device groups for selection
 const DEVICE_GROUPS = [
-  { key: "CARE-A", label: "Archview" },
-  { key: "CARE-B", label: "Hillcrest" },
+  { key: "CARE-B", label: "Archview" }
 ];
 
 // Acceptable environment limits for status lights
@@ -79,7 +78,7 @@ function FourWayStatusLight({ colors, labels }) {
 function DeviceDashboardSelector({ onLogout }) {
   // State for available dates, selected group/date, alerts, and readings
   const [availableDates, setAvailableDates] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState("CARE-A");
+  const [selectedGroup, setSelectedGroup] = useState("CARE-B");
   const [selectedDate, setSelectedDate] = useState("");
   const [unacknowledgedAlerts, setUnacknowledgedAlerts] = useState([]);
   const [deviceAlertStatus, setDeviceAlertStatus] = useState({ "Archview-1": "green", "Archview-2": "green" });
@@ -95,7 +94,7 @@ function DeviceDashboardSelector({ onLogout }) {
 
   // Fetch available dates when group changes
   useEffect(() => {
-    fetch(`http://192.168.1.82:3001/api/available-dates?group=${selectedGroup}`)
+    fetch(`http://192.168.1.22:3001/api/available-dates?group=${selectedGroup}`)
       .then(res => res.json())
       .then(dates => {
         // Support both array and object with 'dates' property
@@ -119,7 +118,7 @@ function DeviceDashboardSelector({ onLogout }) {
   // Fetch latest environment readings and unacknowledged alerts
   function fetchStatus() {
     // Get latest environment readings for both status wheels
-    fetch("http://192.168.1.82:3001/api/latest-readings")
+    fetch("http://192.168.1.22:3001/api/latest-readings")
       .then(res => res.json())
       .then(data => {
         setLatestReadings(data || {});
@@ -148,7 +147,7 @@ function DeviceDashboardSelector({ onLogout }) {
       .catch(() => setLatestReading(null));
 
     // Get unacknowledged alerts for alert status light and alert box
-    fetch("http://192.168.1.82:3001/api/unacknowledged-alerts")
+    fetch("http://192.168.1.22:3001/api/unacknowledged-alerts")
       .then(res => res.json())
       .then(data => {
         setUnacknowledgedAlerts(data.alerts || []);
@@ -166,7 +165,7 @@ function DeviceDashboardSelector({ onLogout }) {
   async function handleGo() {
     if (!selectedDate) return;
     try {
-      await fetch("http://192.168.1.82:3001/api/write-jsonl-for-date", {
+      await fetch("http://192.168.1.22:3001/api/write-jsonl-for-date", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date: selectedDate, group: selectedGroup })
@@ -256,15 +255,14 @@ function DeviceDashboardSelector({ onLogout }) {
             <h2 className="dashboard-title">Select Dashboard</h2>
             {/* Device group selection buttons */}
             <div className="group-buttons">
-              {DEVICE_GROUPS.map((group) => (
-                <button
-                  key={group.key}
-                  onClick={() => setSelectedGroup(group.key)}
-                  className={selectedGroup === group.key ? "selected" : ""}
-                >
-                  {group.label}
-                </button>
-              ))}
+              {/* Only Archview button shown */}
+              <button
+                key="CARE-B"
+                className="selected"
+                disabled
+              >
+                Archview
+              </button>
             </div>
             {/* Date picker */}
             <div className="date-picker-row">

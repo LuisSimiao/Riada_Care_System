@@ -16,7 +16,7 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "http://192.168.1.82:3000"
+    "http://192.168.1.22:3000"
   ]
 }));
 app.use(express.json());
@@ -34,6 +34,6 @@ app.use(acknowledgeAlertRouter);
 require("./livyMqttListener");
 
 const PORT = 3001;
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '192.168.1.22', () => {
   console.log(`API server running on port ${PORT}`);
 });

@@ -2,9 +2,9 @@ const express = require("express");
 const router = express.Router();
 const db = require("./db"); // adjust path to your db connection
 
-// Get the most recent non-null readings for each sensor for both Hillcrest-1 and Hillcrest-2
+// Get the most recent non-null readings for each sensor for both Archview-1 and Archview-2
 router.get("/api/latest-readings", (req, res) => {
-  const device_ids = ["Hillcrest-1", "Hillcrest-2"];
+  const device_ids = ["Archview-1", "Archview-2"];
   const queries = device_ids.map(device_id => ({
     device_id,
     temperature: `SELECT temperature_c FROM environment_readings WHERE device_id = ? AND temperature_c IS NOT NULL ORDER BY timestamp DESC LIMIT 1`,

@@ -10,18 +10,20 @@ router.get("/api/available-dates", (req, res) => {
     : ["Archview-1", "Archview-2"];
 
   db.query(
-    `SELECT DISTINCT timestamp FROM environment_readings WHERE device_id IN (?) ORDER BY timestamp DESC`,
-    [deviceIds],
+    `SELECT DISTINCT timestamp FROM environment_readings WHERE device_id IN (${deviceIds.map(() => '?').join(',')}) ORDER BY timestamp DESC`,
+    deviceIds,
     (err, rows) => {
       if (err) {
         console.error('[available-dates] Error:', err);
         return res.status(500).json({ error: err.message });
       }
+      console.log('[available-dates] Query returned rows:', rows); // Debug log
       // Extract unique dates from plaintext timestamps
       const datesSet = new Set();
       rows.forEach(row => {
         if (row.timestamp) {
-          const date = row.timestamp.slice(0, 10); // YYYY-MM-DD
+          const d = new Date(row.timestamp);
+          const date = d.toISOString().slice(0, 10); // YYYY-MM-DD
           datesSet.add(date);
         }
       });

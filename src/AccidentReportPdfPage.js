@@ -67,7 +67,7 @@ function AccidentReportPdfPage({ onLogout }) {
 
       // Send PDF to backend, including location, accident date, and time in query params
       const res = await fetch(
-        `http://192.168.1.82:3001/api/save-accident-report-pdf?location=${location}&date=${form.text_2ovd}&time=${form.text_3hlzs}`,
+        `http://192.168.1.22:3001/api/save-accident-report-pdf?location=${location}&date=${form.text_2ovd}&time=${form.text_3hlzs}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/pdf" },
@@ -80,7 +80,7 @@ function AccidentReportPdfPage({ onLogout }) {
       const reportTime = form.text_3hlzs;  // adjust to your time field name
 
       // Send to backend to acknowledge matching alerts
-      await fetch("http://192.168.1.82:3001/api/acknowledge-alert", {
+      await fetch("http://192.168.1.22:3001/api/acknowledge-alert", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

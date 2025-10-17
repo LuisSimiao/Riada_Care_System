@@ -46,7 +46,7 @@ function Dashboard() {
 
   // Scan available dates from backend API
   useEffect(() => {
-    fetch("http://192.168.1.82:3001/api/available-dates?group=CARE-A")
+    fetch("http://192.168.1.22:3001/api/available-dates?group=CARE-A")
       .then(res => res.json())
       .then(dates => {
         // Sort dates descending (latest first), ensure only valid date strings
@@ -63,7 +63,7 @@ function Dashboard() {
 
     // Use group for backend request (assume CARE-A for now, or make this stateful if user can select group)
     const group = "CARE-A"; // TODO: make this dynamic if needed
-    fetch("http://192.168.1.82:3001/api/write-jsonl-for-date", {
+    fetch("http://192.168.1.22:3001/api/write-jsonl-for-date", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ date: dashboardDate, group })

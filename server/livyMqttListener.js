@@ -93,9 +93,9 @@ function connectAndSubscribe() {
         if (topicParts.length >= 4) {
           // Map deviceID to friendly device_id if needed
           if (topicParts[1] === deviceID) {
-            topicDeviceId = device_id; // Hillcrest-1
+            topicDeviceId = device_id; // Archview-1
           } else if (topicParts[1] === deviceID2) {
-            topicDeviceId = device_id2; // Hillcrest-2
+            topicDeviceId = device_id2; // Archview-2
           } else {
             topicDeviceId = topicParts[1]; // Otherwise use raw deviceID
           }
@@ -136,6 +136,20 @@ function connectAndSubscribe() {
     else if (topic.endsWith("/CO")) column = "co_ppm";
     else if (topic.endsWith("/CO2")) column = "co2_ppm";
     if (!column) return;
+    // Extract device_id from topic: alive/<deviceID>/sensors/<sensor>
+    const topicParts = topic.split('/');
+    let topicDeviceId = null;
+    if (topicParts.length >= 4) {
+      if (topicParts[1] === deviceID) {
+        topicDeviceId = device_id; // Archview-1
+      } else if (topicParts[1] === deviceID2) {
+        topicDeviceId = device_id2; // Archview-2
+      } else {
+        topicDeviceId = topicParts[1]; // Otherwise use raw deviceID
+      }
+    } else {
+      topicDeviceId = device_id; // fallback
+    }
     try {
       const payload = JSON.parse(message.toString());
       let value = (payload[column] !== undefined && payload[column] !== null)
@@ -159,7 +173,7 @@ function connectAndSubscribe() {
       if (value === null) {
         db.query(
           `SELECT ${column} FROM environment_readings WHERE device_id = ? AND ${column} IS NOT NULL ORDER BY timestamp DESC LIMIT 1`,
-          [device_id],
+          [topicDeviceId],
           (err, results) => {
             if (err) {
               console.error(`Failed to fetch previous ${column} value:`, err);
@@ -179,10 +193,10 @@ function connectAndSubscribe() {
           db.query(
             `INSERT INTO environment_readings (device_id, timestamp, ${column}) VALUES (?, ?, ?)
              ON DUPLICATE KEY UPDATE ${column} = VALUES(${column})`,
-            [device_id, timestamp, encrypt(value)],
+            [topicDeviceId, timestamp, encrypt(value)],
             (err) => {
               if (err) console.error(`Failed to upsert ${column} reading:`, err);
-              else console.log(`${column} reading upserted:`, { device_id, value, timestamp });
+              else console.log(`${column} reading upserted:`, { topicDeviceId, value, timestamp });
             }
           );
         } else {
