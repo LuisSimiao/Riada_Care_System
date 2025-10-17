@@ -26,7 +26,7 @@ function AccidentReportPdfPage({ onLogout }) {
     text_19nypf: ""      // Date (signature)
   });
   const [status, setStatus] = useState("");      // Status message for submission
-  const [location, setLocation] = useState("Archview"); // Selected location
+  const [location, setLocation] = useState("Hillcrest"); // Selected location
 
   // Handles changes to any input field
   function handleChange(e) {

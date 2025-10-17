@@ -52,7 +52,7 @@ function DashboardPage({ onLogout }) {
 
   const [labels] = useState(periods.map(p => p.label));
   const [alertTables, setAlertTables] = useState([]);
-  const [deviceLabel, setDeviceLabel] = useState(group === "CARE-A" ? "Hillcrest" : "Archview");
+  const [deviceLabel, setDeviceLabel] = useState(group === "CARE-A" ? "Hillcrest" : "Hillcrest");
 
   // State for info bubbles
   const [showTempInfo, setShowTempInfo] = useState(false);
@@ -77,7 +77,7 @@ function DashboardPage({ onLogout }) {
         // Map group to device IDs
         const groupDeviceIds = group === "CARE-A"
           ? ["Hillcrest-1", "Hillcrest-2"]
-          : ["Archview-1", "Archview-2"];
+          : ["Hillcrest-1", "Hillcrest-2"];
 
         // Get all device IDs for this group and day (only those with data)
         const deviceIds = groupDeviceIds.filter(deviceId =>
@@ -277,7 +277,7 @@ function DashboardPage({ onLogout }) {
         // Use the same group-to-device mapping as the charts
         const groupDeviceIds = group === "CARE-A"
           ? ["Hillcrest-1", "Hillcrest-2"]
-          : ["Archview-1", "Archview-2"];
+          : ["Hillcrest-1", "Hillcrest-2"];
         // Filter alerts for selected date and group
         const filteredAlerts = alertData.filter(row => {
           if (!groupDeviceIds.includes(row.device_id)) return false;
@@ -323,7 +323,7 @@ function DashboardPage({ onLogout }) {
 
   // Update device label when group changes
   useEffect(() => {
-    setDeviceLabel(group === "CARE-A" ? "Hillcrest" : "Archview");
+    setDeviceLabel(group === "CARE-A" ? "Hillcrest" : "Hillcrest");
   }, [group]);
 
   // Format date for header display (DD/MM/YYYY)

@@ -15,7 +15,7 @@ router.get("/api/environment-data", async (req, res) => {
   if (group === "CARE-A") {
     deviceIds = ["Hillcrest-1", "Hillcrest-2"];
   } else {
-    deviceIds = ["Archview-1", "Archview-2"];
+    deviceIds = ["Hillcrest-1", "Hillcrest-2"];
   }
 
   db.query(

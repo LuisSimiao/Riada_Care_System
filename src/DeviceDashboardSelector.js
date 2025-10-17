@@ -3,7 +3,7 @@ import "./DeviceDashboardSelector.css";
 
 // Device groups for selection
 const DEVICE_GROUPS = [
-  { key: "CARE-B", label: "Archview" }
+  { key: "CARE-B", label: "Hillcrest" }
 ];
 
 // Acceptable environment limits for status lights
@@ -81,7 +81,7 @@ function DeviceDashboardSelector({ onLogout }) {
   const [selectedGroup, setSelectedGroup] = useState("CARE-B");
   const [selectedDate, setSelectedDate] = useState("");
   const [unacknowledgedAlerts, setUnacknowledgedAlerts] = useState([]);
-  const [deviceAlertStatus, setDeviceAlertStatus] = useState({ "Archview-1": "green", "Archview-2": "green" });
+  const [deviceAlertStatus, setDeviceAlertStatus] = useState({ "Hillcrest-1": "green", "Hillcrest-2": "green" });
   const [systemStatus, setSystemStatus] = useState({
     temperature: "grey",
     humidity: "grey",
@@ -123,24 +123,24 @@ function DeviceDashboardSelector({ onLogout }) {
       .then(data => {
         setLatestReadings(data || {});
         // For backward compatibility, also set the first device as latestReading
-        setLatestReading(data["Archview-1"] || null);
+        setLatestReading(data["Hillcrest-1"] || null);
         setSystemStatus(prev => ({
           ...prev,
           temperature:
-            typeof (data["Archview-1"]?.temperature) === "number" && !isNaN(data["Archview-1"].temperature)
-              ? (data["Archview-1"].temperature < LIMITS.temperature.min || data["Archview-1"].temperature > LIMITS.temperature.max ? "red" : "green")
+            typeof (data["Hillcrest-1"]?.temperature) === "number" && !isNaN(data["Hillcrest-1"].temperature)
+              ? (data["Hillcrest-1"].temperature < LIMITS.temperature.min || data["Hillcrest-1"].temperature > LIMITS.temperature.max ? "red" : "green")
               : "grey",
           humidity:
-            typeof (data["Archview-1"]?.humidity) === "number" && !isNaN(data["Archview-1"].humidity)
-              ? (data["Archview-1"].humidity < LIMITS.humidity.min || data["Archview-1"].humidity > LIMITS.humidity.max ? "red" : "green")
+            typeof (data["Hillcrest-1"]?.humidity) === "number" && !isNaN(data["Hillcrest-1"].humidity)
+              ? (data["Hillcrest-1"].humidity < LIMITS.humidity.min || data["Hillcrest-1"].humidity > LIMITS.humidity.max ? "red" : "green")
               : "grey",
           co:
-            typeof (data["Archview-1"]?.co) === "number" && !isNaN(data["Archview-1"].co)
-              ? (data["Archview-1"].co > LIMITS.co.max ? "red" : "green")
+            typeof (data["Hillcrest-1"]?.co) === "number" && !isNaN(data["Hillcrest-1"].co)
+              ? (data["Hillcrest-1"].co > LIMITS.co.max ? "red" : "green")
               : "grey",
           co2:
-            typeof (data["Archview-1"]?.co2) === "number" && !isNaN(data["Archview-1"].co2)
-              ? (data["Archview-1"].co2 > LIMITS.co2.max ? "red" : "green")
+            typeof (data["Hillcrest-1"]?.co2) === "number" && !isNaN(data["Hillcrest-1"].co2)
+              ? (data["Hillcrest-1"].co2 > LIMITS.co2.max ? "red" : "green")
               : "grey"
         }));
       })
@@ -152,10 +152,10 @@ function DeviceDashboardSelector({ onLogout }) {
       .then(data => {
         setUnacknowledgedAlerts(data.alerts || []);
         // Compute alert status per device
-        const status = { "Archview-1": "green", "Archview-2": "green" };
+        const status = { "Hillcrest-1": "green", "Hillcrest-2": "green" };
         (data.alerts || []).forEach(alert => {
-          if (alert.device_id === "Archview-1") status["Archview-1"] = "red";
-          if (alert.device_id === "Archview-2") status["Archview-2"] = "red";
+          if (alert.device_id === "Hillcrest-1") status["Hillcrest-1"] = "red";
+          if (alert.device_id === "Hillcrest-2") status["Hillcrest-2"] = "red";
         });
         setDeviceAlertStatus(status);
       });
@@ -220,27 +220,27 @@ function DeviceDashboardSelector({ onLogout }) {
       {/* Environment status lights row */}
       <div className="lights-row" style={{ display: 'flex', gap: '2rem', justifyContent: 'center' }}>
         <div>
-          <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 4 }}>Archview-1</div>
+          <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 4 }}>Hillcrest-1</div>
           <FourWayStatusLight
             colors={{
-              temperature: latestReadings["Archview-1"] && typeof latestReadings["Archview-1"].temperature === "number" ? getLightColor("temperature", latestReadings["Archview-1"].temperature) : "grey",
-              humidity: latestReadings["Archview-1"] && typeof latestReadings["Archview-1"].humidity === "number" ? getLightColor("humidity", latestReadings["Archview-1"].humidity) : "grey",
-              co: latestReadings["Archview-1"] && typeof latestReadings["Archview-1"].co === "number" ? getLightColor("co", latestReadings["Archview-1"].co) : "grey",
-              co2: latestReadings["Archview-1"] && typeof latestReadings["Archview-1"].co2 === "number" ? getLightColor("co2", latestReadings["Archview-1"].co2) : "grey",
-              unreportedAlerts: deviceAlertStatus["Archview-1"]
+              temperature: latestReadings["Hillcrest-1"] && typeof latestReadings["Hillcrest-1"].temperature === "number" ? getLightColor("temperature", latestReadings["Hillcrest-1"].temperature) : "grey",
+              humidity: latestReadings["Hillcrest-1"] && typeof latestReadings["Hillcrest-1"].humidity === "number" ? getLightColor("humidity", latestReadings["Hillcrest-1"].humidity) : "grey",
+              co: latestReadings["Hillcrest-1"] && typeof latestReadings["Hillcrest-1"].co === "number" ? getLightColor("co", latestReadings["Hillcrest-1"].co) : "grey",
+              co2: latestReadings["Hillcrest-1"] && typeof latestReadings["Hillcrest-1"].co2 === "number" ? getLightColor("co2", latestReadings["Hillcrest-1"].co2) : "grey",
+              unreportedAlerts: deviceAlertStatus["Hillcrest-1"]
             }}
             labels={{}}
           />
         </div>
         <div>
-          <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 4 }}>Archview-2</div>
+          <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 4 }}>Hillcrest-2</div>
           <FourWayStatusLight
             colors={{
-              temperature: latestReadings["Archview-2"] && typeof latestReadings["Archview-2"].temperature === "number" ? getLightColor("temperature", latestReadings["Archview-2"].temperature) : "grey",
-              humidity: latestReadings["Archview-2"] && typeof latestReadings["Archview-2"].humidity === "number" ? getLightColor("humidity", latestReadings["Archview-2"].humidity) : "grey",
-              co: latestReadings["Archview-2"] && typeof latestReadings["Archview-2"].co === "number" ? getLightColor("co", latestReadings["Archview-2"].co) : "grey",
-              co2: latestReadings["Archview-2"] && typeof latestReadings["Archview-2"].co2 === "number" ? getLightColor("co2", latestReadings["Archview-2"].co2) : "grey",
-              unreportedAlerts: deviceAlertStatus["Archview-2"]
+              temperature: latestReadings["Hillcrest-2"] && typeof latestReadings["Hillcrest-2"].temperature === "number" ? getLightColor("temperature", latestReadings["Hillcrest-2"].temperature) : "grey",
+              humidity: latestReadings["Hillcrest-2"] && typeof latestReadings["Hillcrest-2"].humidity === "number" ? getLightColor("humidity", latestReadings["Hillcrest-2"].humidity) : "grey",
+              co: latestReadings["Hillcrest-2"] && typeof latestReadings["Hillcrest-2"].co === "number" ? getLightColor("co", latestReadings["Hillcrest-2"].co) : "grey",
+              co2: latestReadings["Hillcrest-2"] && typeof latestReadings["Hillcrest-2"].co2 === "number" ? getLightColor("co2", latestReadings["Hillcrest-2"].co2) : "grey",
+              unreportedAlerts: deviceAlertStatus["Hillcrest-2"]
             }}
             labels={{}}
           />

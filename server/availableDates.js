@@ -7,7 +7,7 @@ router.get("/api/available-dates", (req, res) => {
   const group = req.query.group; // "CARE-A" or "CARE-B"
   let deviceIds = group === "CARE-A"
     ? ["Hillcrest-1", "Hillcrest-2"]
-    : ["Archview-1", "Archview-2"];
+    : ["Hillcrest-1", "Hillcrest-2"];
 
   db.query(
     `SELECT DISTINCT timestamp FROM environment_readings WHERE device_id IN (${deviceIds.map(() => '?').join(',')}) ORDER BY timestamp DESC`,
