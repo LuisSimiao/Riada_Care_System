@@ -64,7 +64,7 @@ function DashboardPage({ onLogout }) {
     if (!date) return;
 
     // Fetch environment data for the selected date from backend (MySQL)
-    fetch(`http://192.168.1.22:3001/api/environment-data?group=${group}&date=${date}`, {
+    fetch(`http://192.168.1.116:3001/api/environment-data?group=${group}&date=${date}`, {
       method: "GET"
     })
       .then(res => res.json())
