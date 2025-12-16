@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import DOMPurify from 'dompurify';
 import "./DeviceDashboardSelector.css";
 
 // Device groups for selection
@@ -361,8 +362,10 @@ function ChatBot() {
       }
 
       const data = await res.json();
-      const reply = data.reply || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || 'No reply';
-      setMessages(prev => [...prev, { role: 'assistant', text: reply }]);
+      // Server returns HTML-formatted reply in `reply` and original text in `textReply`.
+      const htmlReply = data.reply || null;
+      const textReply = data.textReply || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || 'No reply';
+      setMessages(prev => [...prev, { role: 'assistant', text: textReply, html: htmlReply }]);
     } catch (err) {
       setMessages(prev => [...prev, { role: 'assistant', text: 'Error: ' + err.message }]);
     } finally {
@@ -397,7 +400,11 @@ function ChatBot() {
             {messages.length === 0 && <div className="chatbot-hint">Ask me about the procedures</div>}
             {messages.map((m, i) => (
               <div key={i} className={`chatbot-message ${m.role}`}>
-                <div className="chatbot-bubble">{m.text}</div>
+                <div className="chatbot-bubble">
+                  {m.role === 'assistant' && m.html
+                    ? <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(m.html) }} />
+                    : m.text}
+                </div>
               </div>
             ))}
             {loading && <div className="chatbot-thinking">Thinking...</div>}
