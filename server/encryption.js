@@ -1,7 +1,6 @@
 const crypto = require('crypto');
-const ENCRYPTION_KEY = process.env.AES_KEY
-  ? Buffer.from(process.env.AES_KEY, 'base64')
-  : crypto.randomBytes(32); // fallback for dev
+// WARNING: hardcoded key — acceptable for local testing only. Do NOT commit this to public repos.
+const ENCRYPTION_KEY = Buffer.from('2VNK5/bCKuB8RCIRCmY+WYgFda1PISt3yyeyEdH222E=', 'base64'); // fallback for dev
 
 // Debug log to verify key is loaded correctly
 console.log('[encryption.js] ENCRYPTION_KEY length:', ENCRYPTION_KEY.length, 'First 6 bytes:', ENCRYPTION_KEY.toString('hex').slice(0, 12));

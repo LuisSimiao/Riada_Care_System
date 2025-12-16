@@ -3,15 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util');
 
-// Path to base64 AES key file on the Pi
-const KEY_PATH = '/etc/riada/aes_key.b64';
-
-if (fs.existsSync(KEY_PATH)) {
-  process.env.AES_KEY = fs.readFileSync(KEY_PATH, 'utf8').trim();
-} else if (!process.env.AES_KEY) {
-  console.error(`[export_db_csv] AES key not found at ${KEY_PATH} and AES_KEY env var not set.`);
-  process.exit(1);
-}
+// Hardcoded base64 AES key (insecure; do not commit to public repos)
+process.env.AES_KEY = '2VNK5/bCKuB8RCIRCmY+WYgFda1PISt3yyeyEdH222E=';
 
 // Require modules after AES_KEY is set so encryption.js picks it up
 const db = require('./db');

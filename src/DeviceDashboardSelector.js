@@ -8,7 +8,7 @@ const DEVICE_GROUPS = [
 
 // Acceptable environment limits for status lights
 const LIMITS = {
-  temperature: { min: 18, max: 22 },
+  temperature: { min: 18, max: 24 },
   humidity: { min: 40, max: 60 },
   co: { max: 9 },
   co2: { max: 1000 }
@@ -94,7 +94,7 @@ function DeviceDashboardSelector({ onLogout }) {
 
   // Fetch available dates when group changes
   useEffect(() => {
-    fetch(`http://192.168.1.116:3001/api/available-dates?group=${selectedGroup}`)
+    fetch(`http://localhost:3001/api/available-dates?group=${selectedGroup}`)
       .then(res => res.json())
       .then(dates => {
         // Support both array and object with 'dates' property
@@ -118,7 +118,7 @@ function DeviceDashboardSelector({ onLogout }) {
   // Fetch latest environment readings and unacknowledged alerts
   function fetchStatus() {
     // Get latest environment readings for both status wheels
-    fetch("http://192.168.1.116:3001/api/latest-readings")
+    fetch("http://localhost:3001/api/latest-readings")
       .then(res => res.json())
       .then(data => {
         setLatestReadings(data || {});
@@ -147,7 +147,7 @@ function DeviceDashboardSelector({ onLogout }) {
       .catch(() => setLatestReading(null));
 
     // Get unacknowledged alerts for alert status light and alert box
-    fetch("http://192.168.1.116:3001/api/unacknowledged-alerts")
+    fetch("http://localhost:3001/api/unacknowledged-alerts")
       .then(res => res.json())
       .then(data => {
         setUnacknowledgedAlerts(data.alerts || []);
@@ -165,7 +165,7 @@ function DeviceDashboardSelector({ onLogout }) {
   async function handleGo() {
     if (!selectedDate) return;
     try {
-      await fetch("http://192.168.1.116:3001/api/write-jsonl-for-date", {
+      await fetch("http://localhost:3001/api/write-jsonl-for-date", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date: selectedDate, group: selectedGroup })
@@ -316,7 +316,107 @@ function DeviceDashboardSelector({ onLogout }) {
           </div>
         </div>
       </div>
+      {/* Chatbot popup */}
+      <ChatBot />
     </>
+  );
+}
+
+// Simple ChatBot component (uses a backend /api/chat proxy that holds the OpenAI key)
+function ChatBot() {
+  const [open, setOpen] = React.useState(false);
+  const [messages, setMessages] = React.useState([]);
+  const [input, setInput] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const messagesRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (messagesRef.current) messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+  }, [messages, open]);
+
+  async function sendMessage() {
+    if (!input.trim()) return;
+    const userText = input.trim();
+    setMessages(prev => [...prev, { role: 'user', text: userText }]);
+    setInput("");
+    setLoading(true);
+    try {
+      const res = await fetch('http://localhost:3001/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userText })
+      });
+
+      // If the server returned a non-OK status, capture the body for debugging
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Server returned ${res.status}: ${text}`);
+      }
+
+      // Ensure we only attempt to parse JSON responses
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        const text = await res.text();
+        throw new Error('Unexpected non-JSON response from server: ' + (text ? text.substring(0,200) : '[empty]'));
+      }
+
+      const data = await res.json();
+      const reply = data.reply || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || 'No reply';
+      setMessages(prev => [...prev, { role: 'assistant', text: reply }]);
+    } catch (err) {
+      setMessages(prev => [...prev, { role: 'assistant', text: 'Error: ' + err.message }]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div>
+      {/* Launcher button — styled to match app theme via CSS */}
+      <div className="chatbot-launcher">
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="chatbot-button"
+          title="Chat with assistant"
+          aria-expanded={open}
+          aria-controls="chatbot-panel"
+        >
+          💬
+        </button>
+      </div>
+
+      {/* Popup panel */}
+      {open && (
+        <div id="chatbot-panel" className="chatbot-panel" role="dialog" aria-label="Assistant chat">
+          <div className="chatbot-header">
+            <strong>Assistant</strong>
+            <button className="chatbot-close" onClick={() => setOpen(false)} aria-label="Close chat">✖</button>
+          </div>
+
+          <div ref={messagesRef} className="chatbot-messages">
+            {messages.length === 0 && <div className="chatbot-hint">Ask me about the procedures</div>}
+            {messages.map((m, i) => (
+              <div key={i} className={`chatbot-message ${m.role}`}>
+                <div className="chatbot-bubble">{m.text}</div>
+              </div>
+            ))}
+            {loading && <div className="chatbot-thinking">Thinking...</div>}
+          </div>
+
+          <div className="chatbot-input-row">
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') sendMessage(); }}
+              placeholder="Type a message..."
+              className="chatbot-input"
+              aria-label="Chat input"
+            />
+            <button onClick={sendMessage} disabled={loading} className="chatbot-send" aria-label="Send message">{loading ? '...' : 'Send'}</button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

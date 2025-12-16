@@ -4,7 +4,7 @@ const db = mysql.createConnection({
   host: "127.0.0.1",
   user: "root",
   password: "password",
-  database: "hillcrest_database"
+  database: "hillcrest-database"
 });
 
 db.connect((err) => {

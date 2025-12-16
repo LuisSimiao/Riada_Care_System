@@ -9,6 +9,7 @@ const latestReadingsRouter = require("./latestReadings");
 const unacknowledgedAlertsRouter = require("./unacknowledgedAlerts");
 const writeJsonlForDateRouter = require("./writeJsonlForDate");
 const acknowledgeAlertRouter = require("./acknowledgeAlert");
+const chatRouter = require("./chat");
 
 const app = express();
 
@@ -16,7 +17,7 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "http://192.168.1.22:3000"
+    "http://localhost:3000"
   ]
 }));
 app.use(express.json());
@@ -29,11 +30,12 @@ app.use(latestReadingsRouter);
 app.use(unacknowledgedAlertsRouter);
 app.use(writeJsonlForDateRouter);
 app.use(acknowledgeAlertRouter);
+app.use(chatRouter);
 
 // Livy MQTT listener integration
 require("./livyMqttListener");
 
 const PORT = 3001;
-app.listen(PORT, '192.168.1.22', () => {
+app.listen(PORT, 'localhost', () => {
   console.log(`API server running on port ${PORT}`);
 });
