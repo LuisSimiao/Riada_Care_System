@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import "./DeviceDashboardSelector.css";
 
@@ -77,6 +78,7 @@ function FourWayStatusLight({ colors, labels }) {
  * Main dashboard selector component
  */
 function DeviceDashboardSelector({ onLogout }) {
+  const navigate = useNavigate();
   // State for available dates, selected group/date, alerts, and readings
   const [availableDates, setAvailableDates] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState("CARE-A");
@@ -174,8 +176,8 @@ function DeviceDashboardSelector({ onLogout }) {
     } catch (err) {
       console.error("Failed to write JSONL files:", err);
     }
-    // Instead of opening a new tab, navigate in the same page
-    window.location.href = `/dashboard?group=${selectedGroup}&date=${selectedDate}`;
+    // Use react-router navigation to avoid full page reload
+    navigate(`/dashboard?group=${selectedGroup}&date=${selectedDate}`);
   }
 
   // Check if a date is available for selection

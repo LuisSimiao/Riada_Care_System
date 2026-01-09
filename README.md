@@ -334,18 +334,7 @@ sudo ufw enable
 
 ---
 
-## 14) Backups and maintenance
-- Backup database: `mysqldump -u riada -p hillcrest_database > ~/hillcrest_db_$(date +%F).sql`
-- Backup app files: create a tarball of the project directory.
-- Keep system updated: `sudo apt update && sudo apt upgrade -y` periodically.
-
----
-
-## 15) Security notes
+## 14) Security notes
 - Do not expose MariaDB to the public internet without TLS and strong credentials.
 - Use secure passwords and store secrets (encryption key) outside source control (environment variables or a protected config file).
 - If you enable Samba guest access, be aware files are writable by anyone on the LAN.
-
----
-
-If you want, I can generate the systemd unit files and the two shell scripts for you, or create a secure `.env` example for storing DB and encryption keys. Tell me which you prefer.

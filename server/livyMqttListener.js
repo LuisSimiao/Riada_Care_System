@@ -10,9 +10,9 @@ const options = {
   host: "mqtt.livy.systems",
   port: 8883,
   protocol: "mqtts",
-  username: "HyYmGe1dIRc6",
-  password: "jC7T6pYYdk6FtYaI9K1BEnNfhxOrYeWdpUlAZUJUoGS08t1sAbALr3a3eaMthzLx",
-  clientId: "LUQ3x9nhLiKU",
+  username: "wN5Bw9ZFjAsz",
+  password: "TqJhQhdi8DzZot20bZWJDIVBNTznuPZWSDTjkhNVCq41U0N2NRbhM6oFrUMryCRT",
+  clientId: "iVXKvsJmWMD9",
   rejectUnauthorized: false // Only use this for testing/self-signed certs
 };
 
@@ -26,6 +26,8 @@ const topics = [
   `alive/${deviceID}/sensors/HUMIDITY`,
   `alive/${deviceID}/sensors/CO`,
   `alive/${deviceID}/sensors/CO2`,
+  `alive/${deviceID}/sensors/AIRQUALITY`,
+  `alive/${deviceID}/sensors/ILLUMINANCE`,
   `alive/${deviceID}/alarm/fall`,
   `alive/${deviceID}/alarm/oob`,
   `alive/${deviceID}/alarm/oor`,
@@ -35,6 +37,8 @@ const topics = [
   `alive/${deviceID2}/sensors/HUMIDITY`,
   `alive/${deviceID2}/sensors/CO`,
   `alive/${deviceID2}/sensors/CO2`,
+  `alive/${deviceID2}/sensors/AIRQUALITY`,
+  `alive/${deviceID2}/sensors/ILLUMINANCE`,
   `alive/${deviceID2}/alarm/fall`,
   `alive/${deviceID2}/alarm/oob`,
   `alive/${deviceID2}/alarm/oor`,
@@ -135,6 +139,8 @@ function connectAndSubscribe() {
     else if (topic.endsWith("/HUMIDITY")) column = "humidity_percent";
     else if (topic.endsWith("/CO")) column = "co_ppm";
     else if (topic.endsWith("/CO2")) column = "co2_ppm";
+    else if (topic.endsWith("/AIRQUALITY")) column = "air_quality";
+    else if (topic.endsWith("/ILLUMINANCE")) column = "illuminance_lux";
     if (!column) return;
     // Extract device_id from topic: alive/<deviceID>/sensors/<sensor>
     const topicParts = topic.split('/');

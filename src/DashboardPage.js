@@ -49,6 +49,8 @@ function DashboardPage({ onLogout }) {
   const humidityRef = useRef();
   const coRef = useRef();
   const co2Ref = useRef();
+  const airQualityRef = useRef();
+  const illuminanceRef = useRef();
 
   const [labels] = useState(periods.map(p => p.label));
   const [alertTables, setAlertTables] = useState([]);
@@ -59,6 +61,8 @@ function DashboardPage({ onLogout }) {
   const [showHumidityInfo, setShowHumidityInfo] = useState(false);
   const [showCOInfo, setShowCOInfo] = useState(false);
   const [showCO2Info, setShowCO2Info] = useState(false);
+  const [showAirQualityInfo, setShowAirQualityInfo] = useState(false);
+  const [showIlluminanceInfo, setShowIlluminanceInfo] = useState(false);
 
   useEffect(() => {
     if (!date) return;
@@ -179,11 +183,55 @@ function DashboardPage({ onLogout }) {
           };
         });
 
+        // Air Quality datasets
+        const airQualityDatasets = deviceIds.map((deviceId, idx) => {
+          const filtered = parsedData.filter(row => {
+            if (row.device_id !== deviceId) return false;
+            const d = new Date(row.timestamp.replace(" ", "T"));
+            return (
+              d.getUTCFullYear() === dashboardYear &&
+              d.getUTCMonth() === dashboardMonth - 1 &&
+              d.getUTCDate() === dashboardDay
+            );
+          });
+          return {
+            label: deviceId,
+            data: getAverages(filtered, "air_quality"),
+            borderWidth: 2,
+            fill: false,
+            borderColor: hillcrestColors[idx % hillcrestColors.length],
+            backgroundColor: hillcrestColors[idx % hillcrestColors.length],
+          };
+        });
+
+        // Illuminance datasets
+        const illuminanceDatasets = deviceIds.map((deviceId, idx) => {
+          const filtered = parsedData.filter(row => {
+            if (row.device_id !== deviceId) return false;
+            const d = new Date(row.timestamp.replace(" ", "T"));
+            return (
+              d.getUTCFullYear() === dashboardYear &&
+              d.getUTCMonth() === dashboardMonth - 1 &&
+              d.getUTCDate() === dashboardDay
+            );
+          });
+          return {
+            label: deviceId,
+            data: getAverages(filtered, "illuminance_lux"),
+            borderWidth: 2,
+            fill: false,
+            borderColor: hillcrestColors[idx % hillcrestColors.length],
+            backgroundColor: hillcrestColors[idx % hillcrestColors.length],
+          };
+        });
+
         // Destroy previous charts before creating new ones
         destroyChart(tempRef);
         destroyChart(humidityRef);
         destroyChart(coRef);
         destroyChart(co2Ref);
+        destroyChart(airQualityRef);
+        destroyChart(illuminanceRef);
 
         // Draw charts with multiple lines (one per room/device)
         if (window.Chart) {
@@ -249,6 +297,42 @@ function DashboardPage({ onLogout }) {
                 y: {
                   beginAtZero: false,
                   title: { display: true, text: "CO₂ (ppm)" },
+                },
+              },
+              maintainAspectRatio: false,
+            },
+          });
+
+          // Air Quality chart
+          airQualityRef.current._chart = new window.Chart(airQualityRef.current, {
+            type: "line",
+            data: {
+              labels,
+              datasets: airQualityDatasets,
+            },
+            options: {
+              scales: {
+                y: {
+                  beginAtZero: false,
+                  title: { display: true, text: "Air Quality (index)" },
+                },
+              },
+              maintainAspectRatio: false,
+            },
+          });
+
+          // Illuminance chart
+          illuminanceRef.current._chart = new window.Chart(illuminanceRef.current, {
+            type: "line",
+            data: {
+              labels,
+              datasets: illuminanceDatasets,
+            },
+            options: {
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: { display: true, text: "Illuminance (lux)" },
                 },
               },
               maintainAspectRatio: false,
@@ -458,6 +542,60 @@ function DashboardPage({ onLogout }) {
               </>
             }
             show={showCO2Info}
+          />
+        </div>
+      </div>
+      <div className="charts-row">
+        <div className="chart-container" style={{position:"relative"}}>
+          <canvas id="airQualityChart" ref={airQualityRef} height={300} />
+          <FaInfoCircle
+            title="Shows average air quality index (AQI) for each room and period."
+            style={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              color: "#1a5e8a",
+              cursor: "pointer",
+              zIndex: 11
+            }}
+            size={22}
+            onClick={() => setShowAirQualityInfo(v => !v)}
+          />
+          <InfoBubble
+            text={
+              <>
+                Shows average air quality index (AQI) for each room and period.<br />
+                <strong>Notes:</strong><br />
+                Lower values are better; consult local guidance for thresholds.
+              </>
+            }
+            show={showAirQualityInfo}
+          />
+        </div>
+        <div className="chart-container" style={{position:"relative"}}>
+          <canvas id="illuminanceChart" ref={illuminanceRef} height={300} />
+          <FaInfoCircle
+            title="Shows average illuminance (lux) for each room and period."
+            style={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              color: "#1a5e8a",
+              cursor: "pointer",
+              zIndex: 11
+            }}
+            size={22}
+            onClick={() => setShowIlluminanceInfo(v => !v)}
+          />
+          <InfoBubble
+            text={
+              <>
+                Shows average illuminance (lux) for each room and period.<br />
+                <strong>Typical indoor office:</strong><br />
+                300–500 lux.
+              </>
+            }
+            show={showIlluminanceInfo}
           />
         </div>
       </div>
