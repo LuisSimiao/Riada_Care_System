@@ -4,6 +4,7 @@ import DeviceDashboardSelector from "./DeviceDashboardSelector";
 import DashboardPage from "./DashboardPage";
 import AccidentReportPdfPage from "./AccidentReportPdfPage";
 import LoginPage from "./LoginPage";
+import NurseNotesPage from "./NurseNotesPage"; // added import for nurse notes page
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -43,6 +44,16 @@ function App() {
           element={
             isAuthenticated ? (
               <DashboardPage onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/nurse-notes"
+          element={
+            isAuthenticated ? (
+              <NurseNotesPage onLogout={handleLogout} />
             ) : (
               <Navigate to="/login" replace />
             )

@@ -291,6 +291,14 @@ function DeviceDashboardSelector({ onLogout }) {
             >
               Go to {DEVICE_GROUPS.find((g) => g.key === selectedGroup).label} Dashboard
             </button>
+            {/* Button to open Nurse Notes page */}
+            <button
+              onClick={() => navigate('/nurse-notes')}
+              className="go-dashboard-btn"
+              style={{ marginTop: 8 }}
+            >
+              Notes Checker
+            </button>
           </div>
           {/* Right column: Fill Out Accident Report button and Unacknowledged Alerts */}
           <div className="dashboard-right">
